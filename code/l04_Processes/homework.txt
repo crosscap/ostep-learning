@@ -1,0 +1,35 @@
+cpu-intro
+
+1.
+./process-run.py -l 5:100,5:100
+100
+因为进程没有发起 IO 的指令, 两个进程将交替使用 CPU.
+
+2.
+./process-run.py -l 4:100,1:0
+第一个进程 (PID：0) 消耗 4 个时间片, 随后第二个进程 (PID：1) 开始执行, 先用 1 个时间片, 然后发起 IO 请求, 5 个时间片后, IO 完成, 用 1 个时间片处理完成的 IO. 共计 11 个时间片.
+
+3.
+./process-run.py -l 1:0,4:100
+将进行 IO 的进程 (PID：0) 首先执行, 消耗 1 个时间片, 然后发起 IO 请求, 此时第二个进程 (PID：1) 开始执行, 4 个时间片后第二个进程完成, CPU 空闲, 再过 1 个时间片, IO 完成, 用 1 个时间片处理完成的 IO. 共计 7 个时间片. 所以交换顺序重要.
+
+4.
+./process-run.py -l 1:0,4:100 -c -S SWITCH_ON_END
+开启 SWITCH_ON_END, 将使情况和 2 类似, 只是两个进程交换了顺序.
+
+5.
+./process-run.py -l 1:0,4:100 -c -S SWITCH_ON_IO
+开启 SWITCH_ON_IO, 将使情况和 3 相同.
+
+6.
+./process-run.py -l 3:0,5:100,5:100,5:100 -c -S SWITCH_ON_IO -I IO_RUN_LATER
+开启 SWITCH_ON_IO 和 IO_RUN_LATER, 发出它的进程将在当前进程完成后才使用 CPU. 运行给出的代码, 资源将无法被有效使用. 因为进程 0 在 IO 时, 其他进程将依次使用 CPU, 到最后进程 0 才能继续执行.
+
+7.
+./process-run.py -l 3:0,5:100,5:100,5:100 -c -S SWITCH_ON_IO -I IO_RUN_IMMEDIATE
+开启 SWITCH_ON_IO 和 IO_RUN_IMMEDIATE, 发出它的进程将立即使用 CPU. 当进程 0 发起 IO 完成后, 它将立即使用 CPU, 并发出下一个 IO. 因为发出 IO 请求的进程往往会发出多个 IO 请求, 所以这种情况下, 运行一个刚刚完成 IO 的进程是个好主意.
+
+8.
+./process-run.py -s 1 -l 3:50,3:50
+./process-run.py -s 2 -l 3:50,3:50
+./process-run.py -s 3 -l 3:50,3:50
