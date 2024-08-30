@@ -1,0 +1,96 @@
+1.
+Action: a forks b
+a
+    b
+
+Action: a forks c
+a
+    b
+    c
+
+Action: c EXITS
+a
+    b
+
+Action: a forks d
+a
+    b
+    d
+
+Action: a forks e
+a
+    b
+    d
+    e
+
+2.
+fork percentage 越高, tree 的深度和节点数目都可能增加
+
+3.
+                           Process Tree:
+                               a
+
+a forks b
+                               a
+                               └── b
+b forks c
+                               a
+                               └── b
+                                   └── c
+a forks d
+                               a
+                               ├── b
+                               │   └── c
+                               └── d
+c forks e
+                               a
+                               ├── b
+                               │   └── c
+                               │       └── e
+                               └── d
+a forks f
+                               a
+                               ├── b
+                               │   └── c
+                               │       └── e
+                               ├── d
+                               └── f
+
+4.
+C的子进程也会退出. (错误, C的子进程会被a接管)
+使用 `-R` 后, C的子进程会被b接管.
+
+5.
+Process Tree:
+                               a
+
+Action: a forks b
+Action: a forks c
+Action: c forks d
+Action: d forks e
+Action: b forks f
+
+                        Final Process Tree?
+a
+    b
+        f
+    c
+        d
+            e
+
+
+6.
+Process Tree:
+                               a
+
+a forks b
+a forks c
+a forks e
+a forks b
+c EXITS
+
+                        Final Process Tree:
+                               a
+                               ├── b
+                               ├── e
+                               └── d
