@@ -1,0 +1,24 @@
+{
+  "files.associations": {
+    "*.rst": "restructuredtext",
+    "*.asm": "masm",
+    "*.S": "masm",
+    "*.A51": "masm",
+    "*.nasm": "nasm",
+    "*.s": "asm-intel-x86-generic",
+    "*.mips": "mips",
+    ".vimrc": "viml",
+    ".bashrc": "shellscript",
+    "hosts": "shellscript",
+    "README": "markdown",
+    "LICENSE": "plaintext",
+    "license": "plaintext",
+    "unistd.h": "c",
+    "array": "c",
+    "memory": "c",
+    "ranges": "c",
+    "functional": "c",
+    "tuple": "c",
+    "utility": "c"
+  }
+}

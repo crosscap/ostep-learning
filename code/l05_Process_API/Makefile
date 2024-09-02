@@ -1,8 +1,5 @@
 all: p1 p2 p3 p4
 
-clean:
-	rm -f p1 p2 p3 p4 p4.output
-
 p1: p1.c
 	gcc -o p1 p1.c -Wall
 
@@ -14,3 +11,6 @@ p3: p3.c
 
 p4: p4.c
 	gcc -o p4 p4.c -Wall
+
+clean:
+	rm -f p1 p2 p3 p4 p4.output

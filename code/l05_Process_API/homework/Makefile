@@ -2,9 +2,6 @@ files = q1 q2 q3 q4 q5 q6 q7 q8
 
 all: $(files)
 
-clean:
-	rm -f $(files)
-
 q1: q1.c
 	gcc -o q1 q1.c -Wall
 
@@ -28,3 +25,6 @@ q7: q7.c
 
 q8: q8.c
 	gcc -o q8 q8.c -Wall
+
+clean:
+	rm -f $(files)
