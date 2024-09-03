@@ -16,6 +16,7 @@ prompt> ./scheduler.py -p FIFO -j 3 -s 100
 ```
 
 If that doesn't work, try this:
+
 ```sh
 prompt> python ./scheduler.py -p FIFO -j 3 -s 100
 ```
@@ -32,7 +33,7 @@ ARG jobs 3
 ARG maxlen 10
 ARG seed 100
 
-Here is the job list, with the run time of each job: 
+Here is the job list, with the run time of each job:
   Job 0 (length = 1)
   Job 1 (length = 4)
   Job 2 (length = 7)
@@ -59,7 +60,7 @@ ARG jobs 3
 ARG maxlen 10
 ARG seed 100
 
-Here is the job list, with the run time of each job: 
+Here is the job list, with the run time of each job:
   Job 0 (length = 1)
   Job 1 (length = 4)
   Job 2 (length = 7)
@@ -106,7 +107,7 @@ prompt> ./scheduler.py -p SJF -l 5,10,15
 ARG policy SJF
 ARG jlist 5,10,15
 
-Here is the job list, with the run time of each job: 
+Here is the job list, with the run time of each job:
   Job 0 (length = 5.0)
   Job 1 (length = 10.0)
   Job 2 (length = 15.0)
@@ -120,7 +121,7 @@ the jobs lengths are taken from your comma-separated list.
 Of course, more interesting things happen when you use SJF (shortest-job
 first) or even RR (round robin) schedulers. Try them and see!
 
-And you can always run 
+And you can always run
 
 ```sh
 prompt> ./scheduler.py -h
