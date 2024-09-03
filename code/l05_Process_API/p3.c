@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 int
-main (int argc, char *argv[])
+main(int argc, char *argv[])
 {
 	printf("hello world (pid:%d)\n", (int) getpid());
 	int rc = fork();
@@ -23,7 +23,7 @@ main (int argc, char *argv[])
 	} else {
 		int wc = wait(NULL);
 		printf("hello, I am parent of %d (wc:%d) (pid:%d)\n",
-			rc, wc, (int) getpid());
+		       rc, wc, (int) getpid());
 	}
 	return 0;
 }

@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sys/time.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #define RUNTIME 2000000
 
-int main(void)
+int
+main(void)
 {
 	int i;
 	int rc1, rc2;
@@ -50,7 +51,7 @@ int main(void)
 		microsecond = tv2.tv_usec - tv1.tv_usec;
 		time = second * 1000000 + microsecond;
 		printf("Time: %ld us\n", time);
-		printf("Time per switch: %f us\n", (double)time / RUNTIME / 2);
+		printf("Time per switch: %f us\n", (double) time / RUNTIME / 2);
 	}
 
 	return 0;

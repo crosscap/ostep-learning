@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 void call_execv();
 void call_execvp();
@@ -11,7 +11,8 @@ void call_execl();
 void call_execlp();
 void call_execle();
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
 	int rc = fork();
 
@@ -33,7 +34,8 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-void call_execv()
+void
+call_execv()
 {
 	char *myargs[2];
 	myargs[0] = strdup("/bin/ls");
@@ -41,7 +43,8 @@ void call_execv()
 	execv(myargs[0], myargs);
 }
 
-void call_execvp()
+void
+call_execvp()
 {
 	char *myargs[2];
 	myargs[0] = strdup("ls");
@@ -49,7 +52,8 @@ void call_execvp()
 	execvp(myargs[0], myargs);
 }
 
-void call_execve()
+void
+call_execve()
 {
 	char *myargs[2];
 	myargs[0] = strdup("/bin/ls");
@@ -57,19 +61,22 @@ void call_execve()
 	execve(myargs[0], myargs, NULL);
 }
 
-void call_execl()
+void
+call_execl()
 {
 	char *arg0 = strdup("/bin/ls");
 	execl(arg0, arg0, NULL);
 }
 
-void call_execlp()
+void
+call_execlp()
 {
 	char *arg0 = strdup("ls");
 	execlp(arg0, arg0, NULL);
 }
 
-void call_execle()
+void
+call_execle()
 {
 	char *arg0 = strdup("/bin/ls");
 	execle(arg0, arg0, NULL, NULL);
