@@ -137,8 +137,8 @@ scheduler decided to do. In this example, it begins by running Job 0 for 7 ms
 until Job 0 issues an I/O; this is entirely predictable, as Job 0's I/O
 frequency is set to 7 ms, meaning that every 7 ms it runs, it will issue an
 I/O and wait for it to complete before continuing. At that point, the
-scheduler switches to Job 1, which only runs 2 ms before issuing an I/O. 
-The scheduler prints the entire execution trace in this manner, and 
+scheduler switches to Job 1, which only runs 2 ms before issuing an I/O.
+The scheduler prints the entire execution trace in this manner, and
 finally also computes the response and turnaround times for each job
 as well as an average.
 
@@ -183,7 +183,7 @@ only 20 ms of CPU time to complete, and also never issues I/Os.
 
 Finally, there are three more parameters of interest. The -B flag, if set to a
 non-zero value, boosts all jobs to the highest-priority queue every N
-milliseconds, when invoked as such: 
+milliseconds, when invoked as such:
 ```sh
   prompt> ./mlfq.py -B N
 ```
@@ -197,8 +197,8 @@ intact.  This enables gaming of the scheduler.
 
 Finally, you can easily change how long an I/O lasts by using the -i flag. By
 default in this simplistic model, each I/O takes a fixed amount of time of 5
-milliseconds or whatever you set it to with this flag. 
+milliseconds or whatever you set it to with this flag.
 
 You can also play around with whether jobs that just complete an I/O are moved
 to the head of the queue they are in or to the back, with the -I flag. Check
-it out, it's fun! 
+it out, it's fun!
