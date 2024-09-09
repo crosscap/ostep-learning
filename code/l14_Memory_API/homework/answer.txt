@@ -1,0 +1,144 @@
+1.
+运行正常退出
+
+2.
+Inferior 1 (process 4665) exited normally
+
+3.
+valgrind --leak-check=full ./null
+
+==9993== HEAP SUMMARY:
+==9993==     in use at exit: 0 bytes in 0 blocks
+==9993==   total heap usage: 0 allocs, 0 frees, 0 bytes allocated
+==9993==
+==9993== All heap blocks were freed -- no leaks are possible
+==9993==
+==9993== For lists of detected and suppressed errors, rerun with: -s
+==9993== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+4.
+运行正常退出
+
+Inferior 1 (process 11658) exited normally
+
+valgrind --leak-check=full ./malloc
+
+==11949== HEAP SUMMARY:
+==11949==     in use at exit: 4 bytes in 1 blocks
+==11949==   total heap usage: 1 allocs, 0 frees, 4 bytes allocated
+==11949==
+==11949== 4 bytes in 1 blocks are definitely lost in loss record 1 of 1
+==11949==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==11949==    by 0x109165: main (malloc.c:5)
+==11949==
+==11949== LEAK SUMMARY:
+==11949==    definitely lost: 4 bytes in 1 blocks
+==11949==    indirectly lost: 0 bytes in 0 blocks
+==11949==      possibly lost: 0 bytes in 0 blocks
+==11949==    still reachable: 0 bytes in 0 blocks
+==11949==         suppressed: 0 bytes in 0 blocks
+==11949==
+==11949== For lists of detected and suppressed errors, rerun with: -s
+==11949== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 0 from 0)
+
+发现内存泄漏
+
+5.
+运行正常退出
+
+valgrind --leak-check=full ./out_of_range
+
+==31380== Invalid write of size 4
+==31380==    at 0x10918D: main (out_of_range.c:7)
+==31380==  Address 0x4a9a1d0 is 0 bytes after a block of size 400 alloc'd
+==31380==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==31380==    by 0x10917E: main (out_of_range.c:5)
+==31380==
+==31380==
+==31380== HEAP SUMMARY:
+==31380==     in use at exit: 0 bytes in 0 blocks
+==31380==   total heap usage: 1 allocs, 1 frees, 400 bytes allocated
+==31380==
+==31380== All heap blocks were freed -- no leaks are possible
+==31380==
+==31380== For lists of detected and suppressed errors, rerun with: -s
+==31380== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 0 from 0)
+
+发现越界访问
+
+6.
+运行正常退出, 打印了被释放的内存地址的值
+
+valgrind --leak-check=full ./print_freed
+
+==33033== Invalid read of size 4
+==33033==    at 0x1091C5: main (print_freed.c:10)
+==33033==  Address 0x4a9a068 is 40 bytes inside a block of size 400 free'd
+==33033==    at 0x484B27F: free (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==33033==    by 0x1091BC: main (print_freed.c:9)
+==33033==  Block was alloc'd at
+==33033==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==33033==    by 0x10919E: main (print_freed.c:6)
+==33033==
+1
+==33033==
+==33033== HEAP SUMMARY:
+==33033==     in use at exit: 0 bytes in 0 blocks
+==33033==   total heap usage: 2 allocs, 2 frees, 1,424 bytes allocated
+==33033==
+==33033== All heap blocks were freed -- no leaks are possible
+==33033==
+==33033== For lists of detected and suppressed errors, rerun with: -s
+==33033== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 0 from 0)
+
+发现非法读取
+
+7.
+
+编译器产生 warning, 警告 offset 非 0
+
+valgrind --leak-check=full ./interst_free
+
+==34729== Invalid free() / delete / delete[] / realloc()
+==34729==    at 0x484B27F: free (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==34729==    by 0x109192: main (interst_free.c:8)
+==34729==  Address 0x4a9a068 is 40 bytes inside a block of size 400 alloc'd
+==34729==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==34729==    by 0x10917E: main (interst_free.c:6)
+==34729==
+==34729==
+==34729== HEAP SUMMARY:
+==34729==     in use at exit: 400 bytes in 1 blocks
+==34729==   total heap usage: 1 allocs, 1 frees, 400 bytes allocated
+==34729==
+==34729== 400 bytes in 1 blocks are definitely lost in loss record 1 of 1
+==34729==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==34729==    by 0x10917E: main (interst_free.c:6)
+==34729==
+==34729== LEAK SUMMARY:
+==34729==    definitely lost: 400 bytes in 1 blocks
+==34729==    indirectly lost: 0 bytes in 0 blocks
+==34729==      possibly lost: 0 bytes in 0 blocks
+==34729==    still reachable: 0 bytes in 0 blocks
+==34729==         suppressed: 0 bytes in 0 blocks
+==34729==
+==34729== For lists of detected and suppressed errors, rerun with: -s
+==34729== ERROR SUMMARY: 2 errors from 2 contexts (suppressed: 0 from 0)
+
+valgrind 检测到非法释放和内存泄漏
+
+8.
+表现类似于一般数组, 相对于链表, 尽管 realloc 会导致性能下降, 但具有随机访问能力
+
+valgrind --leak-check=full ./vector
+
+==47815== HEAP SUMMARY:
+==47815==     in use at exit: 0 bytes in 0 blocks
+==47815==   total heap usage: 2 allocs, 2 frees, 20 bytes allocated
+==47815==
+==47815== All heap blocks were freed -- no leaks are possible
+==47815==
+==47815== For lists of detected and suppressed errors, rerun with: -s
+==47815== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+正常
