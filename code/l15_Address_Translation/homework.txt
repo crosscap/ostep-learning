@@ -1,0 +1,139 @@
+vm-mechanism
+
+1.
+
+./relocation.py -s 1
+ARG seed 1
+ARG address space size 1k
+ARG phys mem size 16k
+
+Base-and-Bounds register information:
+
+  Base   : 0x0000363c (decimal 13884)
+  Limit  : 290
+
+Virtual Address Trace
+  VA  0: 0x0000030e (decimal:  782) --> segmentation violation
+  VA  1: 0x00000105 (decimal:  261) --> 0x00003741
+  VA  2: 0x000001fb (decimal:  507) --> segmentation violation
+  VA  3: 0x000001cc (decimal:  460) --> segmentation violation
+  VA  4: 0x0000029b (decimal:  667) --> segmentation violation
+
+
+./relocation.py -s 2
+ARG seed 2
+ARG address space size 1k
+ARG phys mem size 16k
+
+Base-and-Bounds register information:
+
+  Base   : 0x00003ca9 (decimal 15529)
+  Limit  : 500
+
+Virtual Address Trace
+  VA  0: 0x00000039 (decimal:   57) --> 0x00003ce2
+  VA  1: 0x00000056 (decimal:   86) --> 0x00003cff
+  VA  2: 0x00000357 (decimal:  855) --> segmentation violation
+  VA  3: 0x000002f1 (decimal:  753) --> segmentation violation
+  VA  4: 0x000002ad (decimal:  685) --> segmentation violation
+
+./relocation.py -s 3
+ARG seed 3
+ARG address space size 1k
+ARG phys mem size 16k
+
+Base-and-Bounds register information:
+
+  Base   : 0x000022d4 (decimal 8916)
+  Limit  : 316
+
+Virtual Address Trace
+  VA  0: 0x0000017a (decimal:  378) --> segmentation violation
+  VA  1: 0x0000026a (decimal:  618) --> segmentation violation
+  VA  2: 0x00000280 (decimal:  640) --> segmentation violation
+  VA  3: 0x00000043 (decimal:   67) --> 0x00002317
+  VA  4: 0x0000000d (decimal:   13) --> 0x000022e1
+
+
+2.
+./relocation.py -s 0 -n 10
+ARG seed 0
+ARG address space size 1k
+ARG phys mem size 16k
+
+Base-and-Bounds register information:
+
+  Base   : 0x00003082 (decimal 12418)
+  Limit  : 472
+
+Virtual Address Trace
+  VA  0: 0x000001ae (decimal:  430) --> PA or segmentation violation?
+  VA  1: 0x00000109 (decimal:  265) --> PA or segmentation violation?
+  VA  2: 0x0000020b (decimal:  523) --> PA or segmentation violation?
+  VA  3: 0x0000019e (decimal:  414) --> PA or segmentation violation?
+  VA  4: 0x00000322 (decimal:  802) --> PA or segmentation violation?
+  VA  5: 0x00000136 (decimal:  310) --> PA or segmentation violation?
+  VA  6: 0x000001e8 (decimal:  488) --> PA or segmentation violation?
+  VA  7: 0x00000255 (decimal:  597) --> PA or segmentation violation?
+  VA  8: 0x000003a1 (decimal:  929) --> PA or segmentation violation?
+  VA  9: 0x00000204 (decimal:  516) --> PA or segmentation violation?
+
+-l 至少为 930 (929 + 1)
+
+
+3.
+./relocation.py -s 1 -n 10 -l 100
+
+ARG seed 1
+ARG address space size 1k
+ARG phys mem size 16k
+
+Base-and-Bounds register information:
+
+  Base   : 0x00000899 (decimal 2201)
+  Limit  : 100
+
+Virtual Address Trace
+  VA  0: 0x00000363 (decimal:  867) --> PA or segmentation violation?
+  VA  1: 0x0000030e (decimal:  782) --> PA or segmentation violation?
+  VA  2: 0x00000105 (decimal:  261) --> PA or segmentation violation?
+  VA  3: 0x000001fb (decimal:  507) --> PA or segmentation violation?
+  VA  4: 0x000001cc (decimal:  460) --> PA or segmentation violation?
+  VA  5: 0x0000029b (decimal:  667) --> PA or segmentation violation?
+  VA  6: 0x00000327 (decimal:  807) --> PA or segmentation violation?
+  VA  7: 0x00000060 (decimal:   96) --> PA or segmentation violation?
+  VA  8: 0x0000001d (decimal:   29) --> PA or segmentation violation?
+  VA  9: 0x00000357 (decimal:  855) --> PA or segmentation violation?
+
+
+地理空间最大为 16k, 即 0x4000, 而 base 为 0x00000899, 故 bound 最大为 0x4000 - 0x00000899 = 0x3767 = 14183
+
+4.
+./relocation.py -s 1 -n 10 -a 64k -p 32m
+
+ARG seed 1
+ARG address space size 64k
+ARG phys mem size 32m
+
+Base-and-Bounds register information:
+
+  Base   : 0x01b1e2d5 (decimal 28435157)
+  Limit  : 18585
+
+Virtual Address Trace
+  VA  0: 0x0000c386 (decimal: 50054) --> PA or segmentation violation?
+  VA  1: 0x0000414c (decimal: 16716) --> PA or segmentation violation?
+  VA  2: 0x00007ed4 (decimal: 32468) --> PA or segmentation violation?
+  VA  3: 0x00007311 (decimal: 29457) --> PA or segmentation violation?
+  VA  4: 0x0000a6ce (decimal: 42702) --> PA or segmentation violation?
+  VA  5: 0x0000c9e9 (decimal: 51689) --> PA or segmentation violation?
+  VA  6: 0x00001807 (decimal: 6151) --> PA or segmentation violation?
+  VA  7: 0x00000741 (decimal: 1857) --> PA or segmentation violation?
+  VA  8: 0x0000d5f4 (decimal: 54772) --> PA or segmentation violation?
+  VA  9: 0x00006ec9 (decimal: 28361) --> PA or segmentation violation?
+
+地理空间最大为 32m, 即 0x2000000, 而 base 为 0x01b1e2d5, 故 bound 最大为 0x2000000 - 0x01b1e2d5 = 0x4e1d2b = 5119275
+
+5.
+
+随机生成的地址有效的部分为小于 bound 的部分, 即 0 <= VA < bound, 随着 bound 增大, 有效地址数量增多, 直至达到物理内存最大值或者全部有效

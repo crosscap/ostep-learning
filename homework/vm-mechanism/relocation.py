@@ -1,10 +1,11 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 from __future__ import print_function
 import sys
 from optparse import OptionParser
 import random
 import math
+
 
 # to make Python2 and Python3 act the same -- how dumb
 def random_seed(seed):
@@ -13,6 +14,7 @@ def random_seed(seed):
     except:
         random.seed(seed)
     return
+
 
 def convert(size):
     length = len(size)
@@ -35,13 +37,20 @@ def convert(size):
 # main program
 #
 parser = OptionParser()
-parser.add_option('-s', '--seed',      default=0,     help='the random seed',                                action='store', type='int', dest='seed')
-parser.add_option('-a', '--asize',     default='1k',  help='address space size (e.g., 16, 64k, 32m, 1g)',    action='store', type='string', dest='asize')
-parser.add_option('-p', '--physmem',   default='16k', help='physical memory size (e.g., 16, 64k, 32m, 1g)',  action='store', type='string', dest='psize')
-parser.add_option('-n', '--addresses', default=5,     help='number of virtual addresses to generate',        action='store', type='int', dest='num')
-parser.add_option('-b', '--b',         default='-1',  help='value of base register',                         action='store', type='string', dest='base')
-parser.add_option('-l', '--l',         default='-1',  help='value of limit register',                        action='store', type='string', dest='limit')
-parser.add_option('-c', '--compute',   default=False, help='compute answers for me',                         action='store_true', dest='solve')
+parser.add_option('-s', '--seed',      default=0,     help='the random seed',
+                  action='store', type='int', dest='seed')
+parser.add_option('-a', '--asize',     default='1k',
+                  help='address space size (e.g., 16, 64k, 32m, 1g)',    action='store', type='string', dest='asize')
+parser.add_option('-p', '--physmem',   default='16k',
+                  help='physical memory size (e.g., 16, 64k, 32m, 1g)',  action='store', type='string', dest='psize')
+parser.add_option('-n', '--addresses', default=5,
+                  help='number of virtual addresses to generate',        action='store', type='int', dest='num')
+parser.add_option('-b', '--b',         default='-1',  help='value of base register',
+                  action='store', type='string', dest='base')
+parser.add_option('-l', '--l',         default='-1',  help='value of limit register',
+                  action='store', type='string', dest='limit')
+parser.add_option('-c', '--compute',   default=False, help='compute answers for me',
+                  action='store_true', dest='solve')
 
 
 (options, args) = parser.parse_args()
@@ -72,7 +81,7 @@ if psize <= asize:
 # need to generate base, bounds for segment registers
 #
 limit = convert(options.limit)
-base  = convert(options.base)
+base = convert(options.base)
 
 if limit == -1:
     limit = int(asize/4.0 + (asize/4.0 * random.random()))
@@ -100,17 +109,20 @@ if base + limit > psize:
 # now, need to generate virtual address trace
 #
 print('Virtual Address Trace')
-for i in range(0,options.num):
+for i in range(0, options.num):
     vaddr = int(asize * random.random())
     if options.solve == False:
-        print('  VA %2d: 0x%08x (decimal: %4d) --> PA or segmentation violation?' % (i, vaddr, vaddr))
+        print('  VA %2d: 0x%08x (decimal: %4d) --> PA or segmentation violation?' %
+              (i, vaddr, vaddr))
     else:
         paddr = 0
         if (vaddr >= limit):
-            print('  VA %2d: 0x%08x (decimal: %4d) --> SEGMENTATION VIOLATION' % (i, vaddr, vaddr))
+            print('  VA %2d: 0x%08x (decimal: %4d) --> SEGMENTATION VIOLATION' %
+                  (i, vaddr, vaddr))
         else:
             paddr = vaddr + base
-            print('  VA %2d: 0x%08x (decimal: %4d) --> VALID: 0x%08x (decimal: %4d)' % (i, vaddr, vaddr, paddr, paddr))
+            print('  VA %2d: 0x%08x (decimal: %4d) --> VALID: 0x%08x (decimal: %4d)' %
+                  (i, vaddr, vaddr, paddr, paddr))
 
 print('')
 
@@ -119,8 +131,3 @@ if options.solve == False:
     print('OR write down that it is an out-of-bounds address (a segmentation violation). For')
     print('this problem, you should assume a simple virtual address space of a given size.')
     print('')
-
-
-
-
-
