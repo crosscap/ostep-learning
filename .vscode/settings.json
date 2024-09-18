@@ -20,6 +20,8 @@
     "functional": "c",
     "tuple": "c",
     "utility": "c",
-    "stdlib.h": "c"
+    "stdlib.h": "c",
+    "stdio.h": "c",
+    "time.h": "c"
   }
 }

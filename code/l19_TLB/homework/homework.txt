@@ -1,0 +1,66 @@
+1.
+gettimeofday 的精度是微秒级别的, 而在 TLB 命中的情况下, 读取一个数据的时间是纳秒级别的, 所以至少要读取 1000 个数据才能达到微秒时间, 为了精确度, 至少需要 1000 * 100 = 100000 个数据
+
+2.
+# Please check this answer! I am not sure about it.
+./tlb page_num try_num
+
+3.
+./run.py
+
+Time per access: 1.960000 ns in 1 times of access
+Time per access: 1.920000 ns in 2 times of access
+Time per access: 1.867500 ns in 4 times of access
+Time per access: 1.852500 ns in 8 times of access
+Time per access: 3.926875 ns in 16 times of access
+Time per access: 3.925625 ns in 32 times of access
+Time per access: 3.841094 ns in 64 times of access
+Time per access: 5.748672 ns in 128 times of access
+Time per access: 4.747969 ns in 256 times of access
+Time per access: 5.399629 ns in 512 times of access
+Time per access: 5.127988 ns in 1024 times of access
+Time per access: 5.431826 ns in 2048 times of access
+Time per access: 7.612437 ns in 4096 times of access
+Time per access: 10.588265 ns in 8192 times of access
+Time per access: 11.739985 ns in 16384 times of access
+
+Time per access: 2.970000 ns in 1 times of access
+Time per access: 1.785000 ns in 2 times of access
+Time per access: 1.837500 ns in 4 times of access
+Time per access: 1.811250 ns in 8 times of access
+Time per access: 3.174375 ns in 16 times of access
+Time per access: 3.129062 ns in 32 times of access
+Time per access: 3.144687 ns in 64 times of access
+Time per access: 5.812266 ns in 128 times of access
+Time per access: 4.267695 ns in 256 times of access
+Time per access: 3.854043 ns in 512 times of access
+Time per access: 4.291611 ns in 1024 times of access
+Time per access: 5.923193 ns in 2048 times of access
+Time per access: 7.861682 ns in 4096 times of access
+Time per access: 10.369135 ns in 8192 times of access
+Time per access: 11.844742 ns in 16384 times of access
+
+
+5.
+如果循环被优化可以尝试在完成时间计算后输出数组内的数值, 避免编译器优化
+
+6.
+转换 CPU 的过程中如果 TLB 被刷新则会导致 测试的时间大大增加
+
+在 python 中添加
+
+```python
+def set_cpu_affinity(cpu_id):
+    p = psutil.Process(os.getpid())
+    p.cpu_affinity([cpu_id])
+
+
+set_cpu_affinity(0)
+```
+
+或者使用 `taskset -c 0 python3 run.py` 来指定 CPU
+
+7.
+会, 将导致第一次访问必然导致 TLB miss, 随后才是正常测试
+
+进行初始化或者加大测试次数, 平均这一次的访问
