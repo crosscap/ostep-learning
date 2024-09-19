@@ -1,0 +1,7 @@
+PFN = FindFreePhysicalPage()
+if (PFN == -1)              // no free page found
+    PFN = EvictPage()       // run replacement algorithm
+DiskRead(PTE.DiskAddr, pfn) // sleep (waiting for I/O)
+PTE.present = True          // update page table with present
+PTE.PFN = PFN               // bit and translation (PFN)
+RetryInstruction()          // retry instruction
