@@ -1,0 +1,588 @@
+threads-intro
+
+1.
+dx 是计数器, 当 dx 大于等于 0 时将继续进行循环, 由于 dx 的初始值默认为 0, 减一后为 -1, 循环将从第一次即退出
+
+$ ./x86.py -p loop.s -t 1 -i 100 -R dx
+ARG seed 0
+ARG numthreads 1
+ARG program loop.s
+ARG interrupt frequency 100
+ARG interrupt randomness False
+ARG argv
+ARG load address 1000
+ARG memsize 128
+ARG memtrace
+ARG regtrace dx
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+   dx          Thread 0
+    0
+   -1   1000 sub  $1,%dx
+   -1   1001 test $0,%dx
+   -1   1002 jgte .top
+   -1   1003 halt
+
+2.
+$ ./x86.py -p loop.s -t 2 -i 100 -a dx=3,dx=3 -R dx
+ARG seed 0
+ARG numthreads 2
+ARG program loop.s
+ARG interrupt frequency 100
+ARG interrupt randomness False
+ARG argv dx=3,dx=3
+ARG load address 1000
+ARG memsize 128
+ARG memtrace
+ARG regtrace dx
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+   dx          Thread 0                Thread 1
+    3
+    2   1000 sub  $1,%dx
+    2   1001 test $0,%dx
+    2   1002 jgte .top
+    1   1000 sub  $1,%dx
+    1   1001 test $0,%dx
+    1   1002 jgte .top
+    0   1000 sub  $1,%dx
+    0   1001 test $0,%dx
+    0   1002 jgte .top
+   -1   1000 sub  $1,%dx
+   -1   1001 test $0,%dx
+   -1   1002 jgte .top
+   -1   1003 halt
+    3   ----- Halt;Switch -----  ----- Halt;Switch -----
+    2                            1000 sub  $1,%dx
+    2                            1001 test $0,%dx
+    2                            1002 jgte .top
+    1                            1000 sub  $1,%dx
+    1                            1001 test $0,%dx
+    1                            1002 jgte .top
+    0                            1000 sub  $1,%dx
+    0                            1001 test $0,%dx
+    0                            1002 jgte .top
+   -1                            1000 sub  $1,%dx
+   -1                            1001 test $0,%dx
+   -1                            1002 jgte .top
+   -1                            1003 halt
+
+由于没有发生中断, 多线程的存在不影响计算, 这段代码也没有发生竞态条件
+
+3.
+
+$ ./x86.py -p loop.s -t 2 -i 3 -r -a dx=3,dx=3 -R dx -s 0
+ARG seed 0
+ARG numthreads 2
+ARG program loop.s
+ARG interrupt frequency 3
+ARG interrupt randomness True
+ARG argv dx=3,dx=3
+ARG load address 1000
+ARG memsize 128
+ARG memtrace
+ARG regtrace dx
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+   dx          Thread 0                Thread 1
+    3
+    2   1000 sub  $1,%dx
+    2   1001 test $0,%dx
+    2   1002 jgte .top
+    3   ------ Interrupt ------  ------ Interrupt ------
+    2                            1000 sub  $1,%dx
+    2                            1001 test $0,%dx
+    2                            1002 jgte .top
+    2   ------ Interrupt ------  ------ Interrupt ------
+    1   1000 sub  $1,%dx
+    1   1001 test $0,%dx
+    2   ------ Interrupt ------  ------ Interrupt ------
+    1                            1000 sub  $1,%dx
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1   1002 jgte .top
+    0   1000 sub  $1,%dx
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1                            1001 test $0,%dx
+    1                            1002 jgte .top
+    0   ------ Interrupt ------  ------ Interrupt ------
+    0   1001 test $0,%dx
+    0   1002 jgte .top
+   -1   1000 sub  $1,%dx
+    1   ------ Interrupt ------  ------ Interrupt ------
+    0                            1000 sub  $1,%dx
+   -1   ------ Interrupt ------  ------ Interrupt ------
+   -1   1001 test $0,%dx
+   -1   1002 jgte .top
+    0   ------ Interrupt ------  ------ Interrupt ------
+    0                            1001 test $0,%dx
+    0                            1002 jgte .top
+   -1   ------ Interrupt ------  ------ Interrupt ------
+   -1   1003 halt
+    0   ----- Halt;Switch -----  ----- Halt;Switch -----
+   -1                            1000 sub  $1,%dx
+   -1                            1001 test $0,%dx
+   -1   ------ Interrupt ------  ------ Interrupt ------
+   -1                            1002 jgte .top
+   -1                            1003 halt
+
+改变种子和中断频率后虽然看上去二者以不同的中断方式运行, 但是对于两个程序自身而言, 并没有发生变化, 也没有不确定的行为
+
+4.
+
+$ ./x86.py -p looping-race-nolock.s -t 1 -M 2000
+ARG seed 0
+ARG numthreads 1
+ARG program looping-race-nolock.s
+ARG interrupt frequency 50
+ARG interrupt randomness False
+ARG argv
+ARG load address 1000
+ARG memsize 128
+ARG memtrace 2000
+ARG regtrace
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+ 2000          Thread 0
+    0
+    0   1000 mov 2000, %ax
+    0   1001 add $1, %ax
+    1   1002 mov %ax, 2000
+    1   1003 sub  $1, %bx
+    1   1004 test $0, %bx
+    1   1005 jgt .top
+    1   1006 halt
+
+5.
+
+ $ ./x86.py -p looping-race-nolock.s -t 2 -a bx=3 -M 2000
+ARG seed 0
+ARG numthreads 2
+ARG program looping-race-nolock.s
+ARG interrupt frequency 50
+ARG interrupt randomness False
+ARG argv bx=3
+ARG load address 1000
+ARG memsize 128
+ARG memtrace 2000
+ARG regtrace
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+ 2000          Thread 0                Thread 1
+    0
+    0   1000 mov 2000, %ax
+    0   1001 add $1, %ax
+    1   1002 mov %ax, 2000
+    1   1003 sub  $1, %bx
+    1   1004 test $0, %bx
+    1   1005 jgt .top
+    1   1000 mov 2000, %ax
+    1   1001 add $1, %ax
+    2   1002 mov %ax, 2000
+    2   1003 sub  $1, %bx
+    2   1004 test $0, %bx
+    2   1005 jgt .top
+    2   1000 mov 2000, %ax
+    2   1001 add $1, %ax
+    3   1002 mov %ax, 2000
+    3   1003 sub  $1, %bx
+    3   1004 test $0, %bx
+    3   1005 jgt .top
+    3   1006 halt
+    3   ----- Halt;Switch -----  ----- Halt;Switch -----
+    3                            1000 mov 2000, %ax
+    3                            1001 add $1, %ax
+    4                            1002 mov %ax, 2000
+    4                            1003 sub  $1, %bx
+    4                            1004 test $0, %bx
+    4                            1005 jgt .top
+    5                            1000 mov 2000, %ax
+    5                            1001 add $1, %ax
+    5                            1002 mov %ax, 2000
+    5                            1003 sub  $1, %bx
+    5                            1004 test $0, %bx
+    5                            1005 jgt .top
+    5                            1000 mov 2000, %ax
+    5                            1001 add $1, %ax
+    6                            1002 mov %ax, 2000
+    6                            1003 sub  $1, %bx
+    6                            1004 test $0, %bx
+    6                            1005 jgt .top
+    6                            1006 halt
+
+bx 事实上是循环计数器, 当 bx 初始值为 3 时, 代码循环 3 次
+
+x 最终为 6
+
+6.
+
+$ ./x86.py -p looping-race-nolock.s -t 2 -M 2000 -i 4 -r -s 0
+ARG seed 0
+ARG numthreads 2
+ARG program looping-race-nolock.s
+ARG interrupt frequency 4
+ARG interrupt randomness True
+ARG argv
+ARG load address 1000
+ARG memsize 128
+ARG memtrace 2000
+ARG regtrace
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+ 2000          Thread 0                Thread 1
+    0
+    0   1000 mov 2000, %ax
+    0   1001 add $1, %ax
+    1   1002 mov %ax, 2000
+    1   1003 sub  $1, %bx
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1                            1000 mov 2000, %ax
+    1                            1001 add $1, %ax
+    2                            1002 mov %ax, 2000
+    2                            1003 sub  $1, %bx
+    2   ------ Interrupt ------  ------ Interrupt ------
+    2   1004 test $0, %bx
+    2   1005 jgt .top
+    2   ------ Interrupt ------  ------ Interrupt ------
+    2                            1004 test $0, %bx
+    2                            1005 jgt .top
+    2   ------ Interrupt ------  ------ Interrupt ------
+    2   1006 halt
+    2   ----- Halt;Switch -----  ----- Halt;Switch -----
+    2                            1006 halt
+
+$ ./x86.py -p looping-race-nolock.s -t 2 -M 2000 -i 4 -r -s 1
+ARG seed 1
+ARG numthreads 2
+ARG program looping-race-nolock.s
+ARG interrupt frequency 4
+ARG interrupt randomness True
+ARG argv
+ARG load address 1000
+ARG memsize 128
+ARG memtrace 2000
+ARG regtrace
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+ 2000          Thread 0                Thread 1
+    0
+    0   1000 mov 2000, %ax
+    0   ------ Interrupt ------  ------ Interrupt ------
+    0                            1000 mov 2000, %ax
+    0                            1001 add $1, %ax
+    1                            1002 mov %ax, 2000
+    1                            1003 sub  $1, %bx
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1   1001 add $1, %ax
+    1   1002 mov %ax, 2000
+    1   1003 sub  $1, %bx
+    1   1004 test $0, %bx
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1                            1004 test $0, %bx
+    1                            1005 jgt .top
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1   1005 jgt .top
+    1   1006 halt
+    1   ----- Halt;Switch -----  ----- Halt;Switch -----
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1                            1006 halt
+
+中断的位置重要, 发生在以下代码以外的地方是安全的, 发生在以下代码中会引起麻烦, 临界区就是下面的代码
+
+```x86asm
+1000 mov 2000, %ax
+1001 add $1, %ax
+1002 mov %ax, 2000
+```
+
+7.
+
+$ ./x86.py -p looping-race-nolock.s -a bx=1 -t 2 -M 2000 -i 1
+ARG seed 0
+ARG numthreads 2
+ARG program looping-race-nolock.s
+ARG interrupt frequency 1
+ARG interrupt randomness False
+ARG argv bx=1
+ARG load address 1000
+ARG memsize 128
+ARG memtrace 2000
+ARG regtrace
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+ 2000          Thread 0                Thread 1
+    0
+    0   1000 mov 2000, %ax
+    0   ------ Interrupt ------  ------ Interrupt ------
+    0                            1000 mov 2000, %ax
+    0   ------ Interrupt ------  ------ Interrupt ------
+    0   1001 add $1, %ax
+    0   ------ Interrupt ------  ------ Interrupt ------
+    0                            1001 add $1, %ax
+    0   ------ Interrupt ------  ------ Interrupt ------
+    1   1002 mov %ax, 2000
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1                            1002 mov %ax, 2000
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1   1003 sub  $1, %bx
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1                            1003 sub  $1, %bx
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1   1004 test $0, %bx
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1                            1004 test $0, %bx
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1   1005 jgt .top
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1                            1005 jgt .top
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1   1006 halt
+    1   ----- Halt;Switch -----  ----- Halt;Switch -----
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1                            1006 halt
+
+$ ./x86.py -p looping-race-nolock.s -a bx=1 -t 2 -M 2000 -i 2
+ARG seed 0
+ARG numthreads 2
+ARG program looping-race-nolock.s
+ARG interrupt frequency 2
+ARG interrupt randomness False
+ARG argv bx=1
+ARG load address 1000
+ARG memsize 128
+ARG memtrace 2000
+ARG regtrace
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+ 2000          Thread 0                Thread 1
+    0
+    0   1000 mov 2000, %ax
+    0   1001 add $1, %ax
+    0   ------ Interrupt ------  ------ Interrupt ------
+    0                            1000 mov 2000, %ax
+    0                            1001 add $1, %ax
+    0   ------ Interrupt ------  ------ Interrupt ------
+    1   1002 mov %ax, 2000
+    1   1003 sub  $1, %bx
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1                            1002 mov %ax, 2000
+    1                            1003 sub  $1, %bx
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1   1004 test $0, %bx
+    1   1005 jgt .top
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1                            1004 test $0, %bx
+    1                            1005 jgt .top
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1   1006 halt
+    1   ----- Halt;Switch -----  ----- Halt;Switch -----
+    1                            1006 halt
+
+$ ./x86.py -p looping-race-nolock.s -a bx=1 -t 2 -M 2000 -i 3
+ARG seed 0
+ARG numthreads 2
+ARG program looping-race-nolock.s
+ARG interrupt frequency 3
+ARG interrupt randomness False
+ARG argv bx=1
+ARG load address 1000
+ARG memsize 128
+ARG memtrace 2000
+ARG regtrace
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+ 2000          Thread 0                Thread 1
+    0
+    0   1000 mov 2000, %ax
+    0   1001 add $1, %ax
+    1   1002 mov %ax, 2000
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1                            1000 mov 2000, %ax
+    1                            1001 add $1, %ax
+    2                            1002 mov %ax, 2000
+    2   ------ Interrupt ------  ------ Interrupt ------
+    2   1003 sub  $1, %bx
+    2   1004 test $0, %bx
+    2   1005 jgt .top
+    2   ------ Interrupt ------  ------ Interrupt ------
+    2                            1003 sub  $1, %bx
+    2                            1004 test $0, %bx
+    2                            1005 jgt .top
+    2   ------ Interrupt ------  ------ Interrupt ------
+    2   1006 halt
+    2   ----- Halt;Switch -----  ----- Halt;Switch -----
+    2                            1006 halt
+
+$ ./x86.py -p looping-race-nolock.s -a bx=1 -t 2 -M 2000 -i 4
+ARG seed 0
+ARG numthreads 2
+ARG program looping-race-nolock.s
+ARG interrupt frequency 4
+ARG interrupt randomness False
+ARG argv bx=1
+ARG load address 1000
+ARG memsize 128
+ARG memtrace 2000
+ARG regtrace
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+ 2000          Thread 0                Thread 1
+    0
+    0   1000 mov 2000, %ax
+    0   1001 add $1, %ax
+    1   1002 mov %ax, 2000
+    1   1003 sub  $1, %bx
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1                            1000 mov 2000, %ax
+    1                            1001 add $1, %ax
+    2                            1002 mov %ax, 2000
+    2                            1003 sub  $1, %bx
+    2   ------ Interrupt ------  ------ Interrupt ------
+    2   1004 test $0, %bx
+    2   1005 jgt .top
+    2   1006 halt
+    2   ----- Halt;Switch -----  ----- Halt;Switch -----
+    2                            1004 test $0, %bx
+    2   ------ Interrupt ------  ------ Interrupt ------
+    2                            1005 jgt .top
+    2                            1006 halt
+
+中断设置为 3 及以上时, 可以得到正确的答案
+
+8.
+
+设置为 3 的倍数时, 可以得到正确的答案, 其余情况都可能产生其他结果
+
+9.
+
+$ ./x86.py -p wait-for-me.s -a ax=1,ax=0 -R ax -M 2000
+ARG seed 0
+ARG numthreads 2
+ARG program wait-for-me.s
+ARG interrupt frequency 50
+ARG interrupt randomness False
+ARG argv ax=1,ax=0
+ARG load address 1000
+ARG memsize 128
+ARG memtrace 2000
+ARG regtrace ax
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+ 2000      ax          Thread 0                Thread 1
+    0       1
+    0       1   1000 test $1, %ax
+    0       1   1001 je .signaller
+    1       1   1006 mov  $1, 2000
+    1       1   1007 halt
+    1       0   ----- Halt;Switch -----  ----- Halt;Switch -----
+    1       0                            1000 test $1, %ax
+    1       0                            1001 je .signaller
+    1       0                            1002 mov  2000, %cx
+    1       0                            1003 test $1, %cx
+    1       0                            1004 jne .waiter
+    1       0                            1005 halt
+
+10.
+
+$ ./x86.py -p wait-for-me.s -a ax=0,ax=1 -R ax -M 2000 -c
+ARG seed 0
+ARG numthreads 2
+ARG program wait-for-me.s
+ARG interrupt frequency 50
+ARG interrupt randomness False
+ARG argv ax=0,ax=1
+ARG load address 1000
+ARG memsize 128
+ARG memtrace 2000
+ARG regtrace ax
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+ 2000      ax          Thread 0                Thread 1
+    0       0
+    0       0   1000 test $1, %ax
+    0       0   1001 je .signaller
+    0       0   1002 mov  2000, %cx
+    0       0   1003 test $1, %cx
+    0       0   1004 jne .waiter
+    0       0   1002 mov  2000, %cx
+    0       0   1003 test $1, %cx
+    0       0   1004 jne .waiter
+    0       0   1002 mov  2000, %cx
+    0       0   1003 test $1, %cx
+    0       0   1004 jne .waiter
+    0       0   1002 mov  2000, %cx
+    0       0   1003 test $1, %cx
+    0       0   1004 jne .waiter
+    0       0   1002 mov  2000, %cx
+    0       0   1003 test $1, %cx
+    0       0   1004 jne .waiter
+    0       0   1002 mov  2000, %cx
+    0       0   1003 test $1, %cx
+    0       0   1004 jne .waiter
+    0       0   1002 mov  2000, %cx
+    0       0   1003 test $1, %cx
+    0       0   1004 jne .waiter
+    0       0   1002 mov  2000, %cx
+    0       0   1003 test $1, %cx
+    0       0   1004 jne .waiter
+    0       0   1002 mov  2000, %cx
+    0       0   1003 test $1, %cx
+    0       0   1004 jne .waiter
+    0       0   1002 mov  2000, %cx
+    0       0   1003 test $1, %cx
+    0       0   1004 jne .waiter
+    0       0   1002 mov  2000, %cx
+    0       0   1003 test $1, %cx
+    0       0   1004 jne .waiter
+    0       0   1002 mov  2000, %cx
+    0       0   1003 test $1, %cx
+    0       0   1004 jne .waiter
+    0       0   1002 mov  2000, %cx
+    0       0   1003 test $1, %cx
+    0       0   1004 jne .waiter
+    0       0   1002 mov  2000, %cx
+    0       0   1003 test $1, %cx
+    0       0   1004 jne .waiter
+    0       0   1002 mov  2000, %cx
+    0       0   1003 test $1, %cx
+    0       0   1004 jne .waiter
+    0       0   1002 mov  2000, %cx
+    0       0   1003 test $1, %cx
+    0       0   1004 jne .waiter
+    0       1   ------ Interrupt ------  ------ Interrupt ------
+    0       1                            1000 test $1, %ax
+    0       1                            1001 je .signaller
+    0       1                            1006 mov  $1, 2000
+    1       1                            1007 halt
+    1       0   ----- Halt;Switch -----  ----- Halt;Switch -----
+    1       0   1002 mov  2000, %cx
+    1       0   1003 test $1, %cx
+    1       0   1004 jne .waiter
+    1       0   1005 halt
+
+线程 0 不停地等待线程 1 的运行, 直到中断发生, 线程 1 运行, 然后线程 0 运行后面的代码, 改变中断间隔后将改变线程 0 的等待时间, 程序没有高效的利用 CPU

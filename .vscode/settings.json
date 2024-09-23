@@ -22,6 +22,8 @@
     "utility": "c",
     "stdlib.h": "c",
     "stdio.h": "c",
-    "time.h": "c"
+    "time.h": "c",
+    "thread": "cpp",
+    "mythreads.h": "c"
   }
 }
