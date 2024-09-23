@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <pthread.h>
-#include "mythreads.h"
+#include "../include/common_threads.h"
 
 static volatile int counter = 0;
 

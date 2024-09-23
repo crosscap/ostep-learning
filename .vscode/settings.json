@@ -24,6 +24,8 @@
     "stdio.h": "c",
     "time.h": "c",
     "thread": "cpp",
-    "mythreads.h": "c"
+    "mythreads.h": "c",
+    "common_threads.h": "c",
+    "common.h": "c"
   }
 }
