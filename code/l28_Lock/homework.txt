@@ -498,16 +498,513 @@ count          Thread 0                Thread 1
 
 10.
 
-peterson 算法的重点在于设置自己的 flag 后转换 tern, 所以
+peterson 算法的重点在于设置自己的 flag 后转换 tern, 所以重点是在 1005 行的前后设置中断， 观察情况
 
-1.
+测试 -P 00001111, -P 0000011111 -P 000001111111111 均正常
 
 11.
 
+相同
+
 12.
 
+$ ./x86.py -p ticket.s -a bx=1000,bx=1000
+ARG seed 0
+ARG numthreads 2
+ARG program ticket.s
+ARG interrupt frequency 50
+ARG interrupt randomness False
+ARG procsched
+ARG argv bx=1000,bx=1000
+ARG load address 1000
+ARG memsize 128
+ARG memtrace
+ARG regtrace
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+
+       Thread 0                Thread 1
+
+...
+------ Interrupt ------  ------ Interrupt ------
+                         1004 jne .tryagain
+                         1002 mov turn, %cx
+                         1003 test %cx, %ax
+                         1004 jne .tryagain
+                         1005 mov  count, %ax
+                         1006 add  $1, %ax
+                         1007 mov  %ax, count
+                         1008 mov $1, %ax
+                         1009 fetchadd %ax, turn
+                         1010 sub  $1, %bx
+                         1011 test $0, %bx
+                         1012 jgt .top
+                         1000 mov $1, %ax
+                         1001 fetchadd %ax, ticket
+                         1002 mov turn, %cx
+                         1003 test %cx, %ax
+                         1004 jne .tryagain
+                         1002 mov turn, %cx
+                         1003 test %cx, %ax
+                         1004 jne .tryagain
+                         1002 mov turn, %cx
+                         1003 test %cx, %ax
+                         1004 jne .tryagain
+                         1002 mov turn, %cx
+                         1003 test %cx, %ax
+                         1004 jne .tryagain
+                         1002 mov turn, %cx
+                         1003 test %cx, %ax
+                         1004 jne .tryagain
+                         1002 mov turn, %cx
+                         1003 test %cx, %ax
+                         1004 jne .tryagain
+                         1002 mov turn, %cx
+                         1003 test %cx, %ax
+                         1004 jne .tryagain
+                         1002 mov turn, %cx
+                         1003 test %cx, %ax
+                         1004 jne .tryagain
+                         1002 mov turn, %cx
+                         1003 test %cx, %ax
+                         1004 jne .tryagain
+                         1002 mov turn, %cx
+                         1003 test %cx, %ax
+                         1004 jne .tryagain
+                         1002 mov turn, %cx
+                         1003 test %cx, %ax
+                         1004 jne .tryagain
+                         1002 mov turn, %cx
+                         1003 test %cx, %ax
+                         1004 jne .tryagain
+...
+
+大量的时间用于自旋等待
+
 13.
+$ ./x86.py -p ticket.s -a bx=100,bx=100,bx=100 -i 20 -t 3
+ARG seed 0
+ARG numthreads 3
+ARG program ticket.s
+ARG interrupt frequency 20
+ARG interrupt randomness False
+ARG procsched
+ARG argv bx=100,bx=100,bx=100
+ARG load address 1000
+ARG memsize 128
+ARG memtrace
+ARG regtrace
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+
+       Thread 0                Thread 1                Thread 2
+
+1000 mov $1, %ax
+1001 fetchadd %ax, ticket
+1002 mov turn, %cx
+1003 test %cx, %ax
+1004 jne .tryagain
+1005 mov  count, %ax
+1006 add  $1, %ax
+1007 mov  %ax, count
+1008 mov $1, %ax
+1009 fetchadd %ax, turn
+1010 sub  $1, %bx
+1011 test $0, %bx
+1012 jgt .top
+1000 mov $1, %ax
+1001 fetchadd %ax, ticket
+1002 mov turn, %cx
+1003 test %cx, %ax
+1004 jne .tryagain
+1005 mov  count, %ax
+1006 add  $1, %ax
+------ Interrupt ------  ------ Interrupt ------  ------ Interrupt ------
+                         1000 mov $1, %ax
+                         1001 fetchadd %ax, ticket
+                         1002 mov turn, %cx
+                         1003 test %cx, %ax
+                         1004 jne .tryagain
+                         1002 mov turn, %cx
+                         1003 test %cx, %ax
+                         1004 jne .tryagain
+                         1002 mov turn, %cx
+                         1003 test %cx, %ax
+                         1004 jne .tryagain
+                         1002 mov turn, %cx
+                         1003 test %cx, %ax
+                         1004 jne .tryagain
+                         1002 mov turn, %cx
+                         1003 test %cx, %ax
+                         1004 jne .tryagain
+                         1002 mov turn, %cx
+                         1003 test %cx, %ax
+                         1004 jne .tryagain
+------ Interrupt ------  ------ Interrupt ------  ------ Interrupt ------
+                                                  1000 mov $1, %ax
+                                                  1001 fetchadd %ax, ticket
+                                                  1002 mov turn, %cx
+                                                  1003 test %cx, %ax
+                                                  1004 jne .tryagain
+                                                  1002 mov turn, %cx
+                                                  1003 test %cx, %ax
+                                                  1004 jne .tryagain
+                                                  1002 mov turn, %cx
+                                                  1003 test %cx, %ax
+                                                  1004 jne .tryagain
+                                                  1002 mov turn, %cx
+                                                  1003 test %cx, %ax
+                                                  1004 jne .tryagain
+                                                  1002 mov turn, %cx
+                                                  1003 test %cx, %ax
+                                                  1004 jne .tryagain
+                                                  1002 mov turn, %cx
+                                                  1003 test %cx, %ax
+                                                  1004 jne .tryagain
+...
+
+情况更加严重
 
 14.
 
+$ ./x86.py -p test-and-set.s -a bx=5,bx=5 -i 18
+ARG seed 0
+ARG numthreads 2
+ARG program test-and-set.s
+ARG interrupt frequency 18
+ARG interrupt randomness False
+ARG procsched
+ARG argv bx=5,bx=5
+ARG load address 1000
+ARG memsize 128
+ARG memtrace
+ARG regtrace
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+
+       Thread 0                Thread 1
+
+1000 mov  $1, %ax
+1001 xchg %ax, mutex
+1002 test $0, %ax
+1003 jne  .acquire
+1004 mov  count, %ax
+1005 add  $1, %ax
+1006 mov  %ax, count
+1007 mov  $0, mutex
+1008 sub  $1, %bx
+1009 test $0, %bx
+1010 jgt .top
+1000 mov  $1, %ax
+1001 xchg %ax, mutex
+1002 test $0, %ax
+1003 jne  .acquire
+1004 mov  count, %ax
+1005 add  $1, %ax
+1006 mov  %ax, count
+------ Interrupt ------  ------ Interrupt ------
+                         1000 mov  $1, %ax
+                         1001 xchg %ax, mutex
+                         1002 test $0, %ax
+                         1003 jne  .acquire
+                         1000 mov  $1, %ax
+                         1001 xchg %ax, mutex
+                         1002 test $0, %ax
+                         1003 jne  .acquire
+                         1000 mov  $1, %ax
+                         1001 xchg %ax, mutex
+                         1002 test $0, %ax
+                         1003 jne  .acquire
+                         1000 mov  $1, %ax
+                         1001 xchg %ax, mutex
+                         1002 test $0, %ax
+                         1003 jne  .acquire
+                         1000 mov  $1, %ax
+                         1001 xchg %ax, mutex
+------ Interrupt ------  ------ Interrupt ------
+1007 mov  $0, mutex
+1008 sub  $1, %bx
+1009 test $0, %bx
+1010 jgt .top
+1000 mov  $1, %ax
+1001 xchg %ax, mutex
+1002 test $0, %ax
+1003 jne  .acquire
+1004 mov  count, %ax
+1005 add  $1, %ax
+1006 mov  %ax, count
+1007 mov  $0, mutex
+1008 sub  $1, %bx
+1009 test $0, %bx
+1010 jgt .top
+1000 mov  $1, %ax
+1001 xchg %ax, mutex
+1002 test $0, %ax
+------ Interrupt ------  ------ Interrupt ------
+                         1002 test $0, %ax
+                         1003 jne  .acquire
+                         1000 mov  $1, %ax
+                         1001 xchg %ax, mutex
+                         1002 test $0, %ax
+                         1003 jne  .acquire
+                         1000 mov  $1, %ax
+                         1001 xchg %ax, mutex
+                         1002 test $0, %ax
+                         1003 jne  .acquire
+                         1000 mov  $1, %ax
+                         1001 xchg %ax, mutex
+                         1002 test $0, %ax
+                         1003 jne  .acquire
+                         1000 mov  $1, %ax
+                         1001 xchg %ax, mutex
+                         1002 test $0, %ax
+                         1003 jne  .acquire
+------ Interrupt ------  ------ Interrupt ------
+1003 jne  .acquire
+1004 mov  count, %ax
+1005 add  $1, %ax
+1006 mov  %ax, count
+1007 mov  $0, mutex
+1008 sub  $1, %bx
+1009 test $0, %bx
+1010 jgt .top
+1000 mov  $1, %ax
+1001 xchg %ax, mutex
+1002 test $0, %ax
+1003 jne  .acquire
+1004 mov  count, %ax
+1005 add  $1, %ax
+1006 mov  %ax, count
+1007 mov  $0, mutex
+1008 sub  $1, %bx
+1009 test $0, %bx
+------ Interrupt ------  ------ Interrupt ------
+                         1000 mov  $1, %ax
+                         1001 xchg %ax, mutex
+                         1002 test $0, %ax
+                         1003 jne  .acquire
+                         1004 mov  count, %ax
+                         1005 add  $1, %ax
+                         1006 mov  %ax, count
+                         1007 mov  $0, mutex
+                         1008 sub  $1, %bx
+                         1009 test $0, %bx
+                         1010 jgt .top
+                         1000 mov  $1, %ax
+                         1001 xchg %ax, mutex
+                         1002 test $0, %ax
+                         1003 jne  .acquire
+                         1004 mov  count, %ax
+                         1005 add  $1, %ax
+                         1006 mov  %ax, count
+------ Interrupt ------  ------ Interrupt ------
+1010 jgt .top
+1011 halt
+----- Halt;Switch -----  ----- Halt;Switch -----
+                         1007 mov  $0, mutex
+                         1008 sub  $1, %bx
+                         1009 test $0, %bx
+                         1010 jgt .top
+                         1000 mov  $1, %ax
+                         1001 xchg %ax, mutex
+                         1002 test $0, %ax
+                         1003 jne  .acquire
+                         1004 mov  count, %ax
+                         1005 add  $1, %ax
+                         1006 mov  %ax, count
+                         1007 mov  $0, mutex
+                         1008 sub  $1, %bx
+                         1009 test $0, %bx
+                         1010 jgt .top
+                         1000 mov  $1, %ax
+------ Interrupt ------  ------ Interrupt ------
+                         1001 xchg %ax, mutex
+                         1002 test $0, %ax
+                         1003 jne  .acquire
+                         1004 mov  count, %ax
+                         1005 add  $1, %ax
+                         1006 mov  %ax, count
+                         1007 mov  $0, mutex
+                         1008 sub  $1, %bx
+                         1009 test $0, %bx
+                         1010 jgt .top
+                         1000 mov  $1, %ax
+                         1001 xchg %ax, mutex
+                         1002 test $0, %ax
+                         1003 jne  .acquire
+                         1004 mov  count, %ax
+                         1005 add  $1, %ax
+                         1006 mov  %ax, count
+                         1007 mov  $0, mutex
+------ Interrupt ------  ------ Interrupt ------
+                         1008 sub  $1, %bx
+                         1009 test $0, %bx
+                         1010 jgt .top
+                         1011 halt
+
+这种情况下, 进程 1 的大部分时间都是在进行自旋
+
+$ ./x86.py -p yield.s -a bx=5,bx=5 -i 18
+ARG seed 0
+ARG numthreads 2
+ARG program yield.s
+ARG interrupt frequency 18
+ARG interrupt randomness False
+ARG procsched
+ARG argv bx=5,bx=5
+ARG load address 1000
+ARG memsize 128
+ARG memtrace
+ARG regtrace
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+
+       Thread 0                Thread 1
+
+1000 mov  $1, %ax
+1001 xchg %ax, mutex
+1002 test $0, %ax
+1003 je .acquire_done
+1006 mov  count, %ax
+1007 add  $1, %ax
+1008 mov  %ax, count
+1009 mov  $0, mutex
+1010 sub  $1, %bx
+1011 test $0, %bx
+1012 jgt .top
+1000 mov  $1, %ax
+1001 xchg %ax, mutex
+1002 test $0, %ax
+1003 je .acquire_done
+1006 mov  count, %ax
+1007 add  $1, %ax
+1008 mov  %ax, count
+------ Interrupt ------  ------ Interrupt ------
+                         1000 mov  $1, %ax
+                         1001 xchg %ax, mutex
+                         1002 test $0, %ax
+                         1003 je .acquire_done
+                         1004 yield
+------ Interrupt ------  ------ Interrupt ------
+1009 mov  $0, mutex
+1010 sub  $1, %bx
+1011 test $0, %bx
+1012 jgt .top
+1000 mov  $1, %ax
+1001 xchg %ax, mutex
+1002 test $0, %ax
+1003 je .acquire_done
+1006 mov  count, %ax
+1007 add  $1, %ax
+1008 mov  %ax, count
+1009 mov  $0, mutex
+1010 sub  $1, %bx
+1011 test $0, %bx
+1012 jgt .top
+1000 mov  $1, %ax
+1001 xchg %ax, mutex
+1002 test $0, %ax
+------ Interrupt ------  ------ Interrupt ------
+                         1005 j .acquire
+                         1000 mov  $1, %ax
+                         1001 xchg %ax, mutex
+                         1002 test $0, %ax
+                         1003 je .acquire_done
+                         1004 yield
+------ Interrupt ------  ------ Interrupt ------
+1003 je .acquire_done
+1006 mov  count, %ax
+1007 add  $1, %ax
+1008 mov  %ax, count
+1009 mov  $0, mutex
+1010 sub  $1, %bx
+1011 test $0, %bx
+1012 jgt .top
+1000 mov  $1, %ax
+1001 xchg %ax, mutex
+1002 test $0, %ax
+1003 je .acquire_done
+1006 mov  count, %ax
+1007 add  $1, %ax
+1008 mov  %ax, count
+1009 mov  $0, mutex
+1010 sub  $1, %bx
+1011 test $0, %bx
+------ Interrupt ------  ------ Interrupt ------
+                         1005 j .acquire
+                         1000 mov  $1, %ax
+                         1001 xchg %ax, mutex
+                         1002 test $0, %ax
+                         1003 je .acquire_done
+                         1006 mov  count, %ax
+                         1007 add  $1, %ax
+                         1008 mov  %ax, count
+                         1009 mov  $0, mutex
+                         1010 sub  $1, %bx
+                         1011 test $0, %bx
+                         1012 jgt .top
+                         1000 mov  $1, %ax
+                         1001 xchg %ax, mutex
+                         1002 test $0, %ax
+                         1003 je .acquire_done
+                         1006 mov  count, %ax
+                         1007 add  $1, %ax
+------ Interrupt ------  ------ Interrupt ------
+1012 jgt .top
+1013 halt
+----- Halt;Switch -----  ----- Halt;Switch -----
+                         1008 mov  %ax, count
+                         1009 mov  $0, mutex
+                         1010 sub  $1, %bx
+                         1011 test $0, %bx
+                         1012 jgt .top
+                         1000 mov  $1, %ax
+                         1001 xchg %ax, mutex
+                         1002 test $0, %ax
+                         1003 je .acquire_done
+                         1006 mov  count, %ax
+                         1007 add  $1, %ax
+                         1008 mov  %ax, count
+                         1009 mov  $0, mutex
+                         1010 sub  $1, %bx
+                         1011 test $0, %bx
+                         1012 jgt .top
+------ Interrupt ------  ------ Interrupt ------
+                         1000 mov  $1, %ax
+                         1001 xchg %ax, mutex
+                         1002 test $0, %ax
+                         1003 je .acquire_done
+                         1006 mov  count, %ax
+                         1007 add  $1, %ax
+                         1008 mov  %ax, count
+                         1009 mov  $0, mutex
+                         1010 sub  $1, %bx
+                         1011 test $0, %bx
+                         1012 jgt .top
+                         1000 mov  $1, %ax
+                         1001 xchg %ax, mutex
+                         1002 test $0, %ax
+                         1003 je .acquire_done
+                         1006 mov  count, %ax
+                         1007 add  $1, %ax
+                         1008 mov  %ax, count
+------ Interrupt ------  ------ Interrupt ------
+                         1009 mov  $0, mutex
+                         1010 sub  $1, %bx
+                         1011 test $0, %bx
+                         1012 jgt .top
+                         1013 halt
+
+这种情况下, 进程 1 将进程让出进程
+
 15.
+
+类似于 test-and-set.s, 但是在其基础上增加一个 test 过程, 使得大部分时间处于仅有 3 条指令组成的循环中, 减少 xchg 的使用
