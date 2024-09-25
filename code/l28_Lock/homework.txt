@@ -1,0 +1,513 @@
+threads-locks
+
+1.
+
+$ ./x86.py -p flag.s
+ARG seed 0
+ARG numthreads 2
+ARG program flag.s
+ARG interrupt frequency 50
+ARG interrupt randomness False
+ARG procsched
+ARG argv
+ARG load address 1000
+ARG memsize 128
+ARG memtrace
+ARG regtrace
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+
+       Thread 0                Thread 1
+
+1000 mov  flag, %ax
+1001 test $0, %ax
+1002 jne  .acquire
+1003 mov  $1, flag
+1004 mov  count, %ax
+1005 add  $1, %ax
+1006 mov  %ax, count
+1007 mov  $0, flag
+1008 sub  $1, %bx
+1009 test $0, %bx
+1010 jgt .top
+1011 halt
+----- Halt;Switch -----  ----- Halt;Switch -----
+                         1000 mov  flag, %ax
+                         1001 test $0, %ax
+                         1002 jne  .acquire
+                         1003 mov  $1, flag
+                         1004 mov  count, %ax
+                         1005 add  $1, %ax
+                         1006 mov  %ax, count
+                         1007 mov  $0, flag
+                         1008 sub  $1, %bx
+                         1009 test $0, %bx
+                         1010 jgt .top
+
+该代码表示: 从 flag 中取值, 如果 flag 为 0, 则可以访问 count 此时将 flag 设为 1, 并访问, 最后将 flag 设置为 0;
+
+如果 flag 为 1, 则不可以访问 count, 此时进行循环
+
+2.
+
+在默认情况下, 代码似乎正常工作
+
+3.
+
+$ ./x86.py -p flag.s -a bx=2,bx=2
+ARG seed 0
+ARG numthreads 2
+ARG program flag.s
+ARG interrupt frequency 50
+ARG interrupt randomness False
+ARG procsched
+ARG argv bx=2,bx=2
+ARG load address 1000
+ARG memsize 128
+ARG memtrace
+ARG regtrace
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+
+       Thread 0                Thread 1
+
+1000 mov  flag, %ax
+1001 test $0, %ax
+1002 jne  .acquire
+1003 mov  $1, flag
+1004 mov  count, %ax
+1005 add  $1, %ax
+1006 mov  %ax, count
+1007 mov  $0, flag
+1008 sub  $1, %bx
+1009 test $0, %bx
+1010 jgt .top
+1000 mov  flag, %ax
+1001 test $0, %ax
+1002 jne  .acquire
+1003 mov  $1, flag
+1004 mov  count, %ax
+1005 add  $1, %ax
+1006 mov  %ax, count
+1007 mov  $0, flag
+1008 sub  $1, %bx
+1009 test $0, %bx
+1010 jgt .top
+1011 halt
+----- Halt;Switch -----  ----- Halt;Switch -----
+                         1000 mov  flag, %ax
+                         1001 test $0, %ax
+                         1002 jne  .acquire
+                         1003 mov  $1, flag
+                         1004 mov  count, %ax
+                         1005 add  $1, %ax
+                         1006 mov  %ax, count
+                         1007 mov  $0, flag
+                         1008 sub  $1, %bx
+                         1009 test $0, %bx
+                         1010 jgt .top
+                         1000 mov  flag, %ax
+                         1001 test $0, %ax
+                         1002 jne  .acquire
+                         1003 mov  $1, flag
+                         1004 mov  count, %ax
+                         1005 add  $1, %ax
+                         1006 mov  %ax, count
+                         1007 mov  $0, flag
+                         1008 sub  $1, %bx
+                         1009 test $0, %bx
+                         1010 jgt .top
+                         1011 halt
+
+这时访问 count 代码片段会循环进行两次, 代码仍然正常运行
+
+4.
+
+$ ./x86.py -p flag.s -a bx=10,bx=10 -M count -c
+ARG seed 0
+ARG numthreads 2
+ARG program flag.s
+ARG interrupt frequency 50
+ARG interrupt randomness False
+ARG procsched
+ARG argv bx=10,bx=10
+ARG load address 1000
+ARG memsize 128
+ARG memtrace count
+ARG regtrace
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+
+count          Thread 0                Thread 1
+
+...
+   13   ------ Interrupt ------  ------ Interrupt ------
+   13   1001 test $0, %ax
+   13   1002 jne  .acquire
+   13   1003 mov  $1, flag
+   13   1004 mov  count, %ax
+   13   1005 add  $1, %ax
+   14   1006 mov  %ax, count
+   14   1007 mov  $0, flag
+   14   1008 sub  $1, %bx
+   14   1009 test $0, %bx
+   14   1010 jgt .top
+   14   1011 halt
+   14   ----- Halt;Switch -----  ----- Halt;Switch -----
+   14                            1005 add  $1, %ax
+   14                            1006 mov  %ax, count
+   14                            1007 mov  $0, flag
+   14                            1008 sub  $1, %bx
+   14                            1009 test $0, %bx
+   14                            1010 jgt .top
+   14                            1000 mov  flag, %ax
+   14                            1001 test $0, %ax
+   14                            1002 jne  .acquire
+   14                            1003 mov  $1, flag
+   14                            1004 mov  count, %ax
+   14                            1005 add  $1, %ax
+   15                            1006 mov  %ax, count
+   15                            1007 mov  $0, flag
+   15                            1008 sub  $1, %bx
+   15                            1009 test $0, %bx
+   15                            1010 jgt .top
+   15                            1000 mov  flag, %ax
+   15                            1001 test $0, %ax
+   15                            1002 jne  .acquire
+   15                            1003 mov  $1, flag
+   15                            1004 mov  count, %ax
+   15                            1005 add  $1, %ax
+   16                            1006 mov  %ax, count
+   16                            1007 mov  $0, flag
+   16                            1008 sub  $1, %bx
+   16                            1009 test $0, %bx
+   16                            1010 jgt .top
+   16                            1000 mov  flag, %ax
+   16                            1001 test $0, %ax
+   16                            1002 jne  .acquire
+   16                            1003 mov  $1, flag
+   16                            1004 mov  count, %ax
+   16                            1005 add  $1, %ax
+   17                            1006 mov  %ax, count
+   17                            1007 mov  $0, flag
+   17                            1008 sub  $1, %bx
+   17                            1009 test $0, %bx
+   17                            1010 jgt .top
+   17   ------ Interrupt ------  ------ Interrupt ------
+   17                            1000 mov  flag, %ax
+   17                            1001 test $0, %ax
+   17                            1002 jne  .acquire
+   17                            1003 mov  $1, flag
+   17                            1004 mov  count, %ax
+   17                            1005 add  $1, %ax
+   18                            1006 mov  %ax, count
+   18                            1007 mov  $0, flag
+   18                            1008 sub  $1, %bx
+   18                            1009 test $0, %bx
+   18                            1010 jgt .top
+   18                            1000 mov  flag, %ax
+   18                            1001 test $0, %ax
+   18                            1002 jne  .acquire
+   18                            1003 mov  $1, flag
+   18                            1004 mov  count, %ax
+   18                            1005 add  $1, %ax
+   19                            1006 mov  %ax, count
+   19                            1007 mov  $0, flag
+   19                            1008 sub  $1, %bx
+   19                            1009 test $0, %bx
+   19                            1010 jgt .top
+   19                            1011 halt
+
+两个 bx 都设置为 10 时, 首次出现错误最终值
+
+$ ./x86.py -p flag.s -a bx=5,bx=5 -i 14 -M count -c
+ARG seed 0
+ARG numthreads 2
+ARG program flag.s
+ARG interrupt frequency 14
+ARG interrupt randomness False
+ARG procsched
+ARG argv bx=5,bx=5
+ARG load address 1000
+ARG memsize 128
+ARG memtrace count
+ARG regtrace
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+
+count          Thread 0                Thread 1
+...
+    6   ------ Interrupt ------  ------ Interrupt ------
+    6   1009 test $0, %bx
+    6   1010 jgt .top
+    6   1000 mov  flag, %ax
+    6   1001 test $0, %ax
+    6   1002 jne  .acquire
+    6   1003 mov  $1, flag
+    6   1004 mov  count, %ax
+    6   1005 add  $1, %ax
+    7   1006 mov  %ax, count
+    7   1007 mov  $0, flag
+    7   1008 sub  $1, %bx
+    7   1009 test $0, %bx
+    7   1010 jgt .top
+    7   1011 halt
+    7   ----- Halt;Switch -----  ----- Halt;Switch -----
+    7   ------ Interrupt ------  ------ Interrupt ------
+    7                            1009 test $0, %bx
+    7                            1010 jgt .top
+    7                            1000 mov  flag, %ax
+    7                            1001 test $0, %ax
+    7                            1002 jne  .acquire
+    7                            1003 mov  $1, flag
+    7                            1004 mov  count, %ax
+    7                            1005 add  $1, %ax
+    8                            1006 mov  %ax, count
+    8                            1007 mov  $0, flag
+    8                            1008 sub  $1, %bx
+    8                            1009 test $0, %bx
+    8                            1010 jgt .top
+    8                            1011 halt
+
+两个 bx 都设置为 5 时, 并且设置每 14 个周期中断一次, 出现错误最终值
+
+通过设置中断周期, 使得中断不会出现在 1000-1003 这几行之间的时候, 代码可以正常运行, 由于代码理论上可以运行无数次, 所以需要设置中断周期为进行一次递增的时钟周期的整数倍, 即为 11 的倍数
+
+5.
+
+把 1 同 mutex 互换, 用于获取锁, 获取失败则自旋; 将 0 写入 mutex 用于释放锁
+
+6.
+
+ $ ./x86.py -p test-and-set.s -a bx=500,bx=500 -i 5 -M count -c
+
+count          Thread 0                Thread 1
+...
+999   ------ Interrupt ------  ------ Interrupt ------
+  999                            1001 xchg %ax, mutex
+  999                            1002 test $0, %ax
+  999                            1003 jne  .acquire
+  999                            1004 mov  count, %ax
+  999                            1005 add  $1, %ax
+  999   ------ Interrupt ------  ------ Interrupt ------
+  999   1010 jgt .top
+  999   1011 halt
+  999   ----- Halt;Switch -----  ----- Halt;Switch -----
+ 1000                            1006 mov  %ax, count
+ 1000                            1007 mov  $0, mutex
+ 1000                            1008 sub  $1, %bx
+ 1000   ------ Interrupt ------  ------ Interrupt ------
+ 1000                            1009 test $0, %bx
+ 1000                            1010 jgt .top
+ 1000                            1011 halt
+
+ 在高循环次数, 高中断频率下, 代码仍然正常运行
+
+ 有时会导致 CPU 效率不高, 体现在相同条件下, set-and-test.s 会比 flag.s 打印更多的代码行
+
+7.
+
+$ ./x86.py -p test-and-set.s -a bx=2,bx=2 -M count -P 00111 -c
+ARG seed 0
+ARG numthreads 2
+ARG program test-and-set.s
+ARG interrupt frequency 50
+ARG interrupt randomness False
+ARG procsched 00111
+ARG argv bx=2,bx=2
+ARG load address 1000
+ARG memsize 128
+ARG memtrace count
+ARG regtrace
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+
+count          Thread 0                Thread 1
+
+    0
+    0   1000 mov  $1, %ax
+    0   1001 xchg %ax, mutex
+    0   ------ Interrupt ------  ------ Interrupt ------
+    0                            1000 mov  $1, %ax
+    0                            1001 xchg %ax, mutex
+    0                            1002 test $0, %ax
+    0   ------ Interrupt ------  ------ Interrupt ------
+    0   1002 test $0, %ax
+    0   1003 jne  .acquire
+    0   ------ Interrupt ------  ------ Interrupt ------
+    0                            1003 jne  .acquire
+    0                            1000 mov  $1, %ax
+    0                            1001 xchg %ax, mutex
+    0   ------ Interrupt ------  ------ Interrupt ------
+    0   1004 mov  count, %ax
+    0   1005 add  $1, %ax
+    0   ------ Interrupt ------  ------ Interrupt ------
+    0                            1002 test $0, %ax
+    0                            1003 jne  .acquire
+    0                            1000 mov  $1, %ax
+    0   ------ Interrupt ------  ------ Interrupt ------
+    1   1006 mov  %ax, count
+    1   1007 mov  $0, mutex
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1                            1001 xchg %ax, mutex
+    1                            1002 test $0, %ax
+    1                            1003 jne  .acquire
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1   1008 sub  $1, %bx
+    1   1009 test $0, %bx
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1                            1004 mov  count, %ax
+    1                            1005 add  $1, %ax
+    2                            1006 mov  %ax, count
+    2   ------ Interrupt ------  ------ Interrupt ------
+    2   1010 jgt .top
+    2   1000 mov  $1, %ax
+    2   ------ Interrupt ------  ------ Interrupt ------
+    2                            1007 mov  $0, mutex
+    2                            1008 sub  $1, %bx
+    2                            1009 test $0, %bx
+    2   ------ Interrupt ------  ------ Interrupt ------
+    2   1001 xchg %ax, mutex
+    2   1002 test $0, %ax
+    2   ------ Interrupt ------  ------ Interrupt ------
+    2                            1010 jgt .top
+    2                            1000 mov  $1, %ax
+    2                            1001 xchg %ax, mutex
+    2   ------ Interrupt ------  ------ Interrupt ------
+    2   1003 jne  .acquire
+    2   1004 mov  count, %ax
+    2   ------ Interrupt ------  ------ Interrupt ------
+    2                            1002 test $0, %ax
+    2                            1003 jne  .acquire
+    2                            1000 mov  $1, %ax
+    2   ------ Interrupt ------  ------ Interrupt ------
+    2   1005 add  $1, %ax
+    3   1006 mov  %ax, count
+    3   ------ Interrupt ------  ------ Interrupt ------
+    3                            1001 xchg %ax, mutex
+    3                            1002 test $0, %ax
+    3                            1003 jne  .acquire
+    3   ------ Interrupt ------  ------ Interrupt ------
+    3   1007 mov  $0, mutex
+    3   1008 sub  $1, %bx
+    3   ------ Interrupt ------  ------ Interrupt ------
+    3                            1000 mov  $1, %ax
+    3                            1001 xchg %ax, mutex
+    3                            1002 test $0, %ax
+    3   ------ Interrupt ------  ------ Interrupt ------
+    3   1009 test $0, %bx
+    3   1010 jgt .top
+    3   ------ Interrupt ------  ------ Interrupt ------
+    3                            1003 jne  .acquire
+    3                            1004 mov  count, %ax
+    3                            1005 add  $1, %ax
+    3   ------ Interrupt ------  ------ Interrupt ------
+    3   1011 halt
+    3   ----- Halt;Switch -----  ----- Halt;Switch -----
+    4                            1006 mov  %ax, count
+    4                            1007 mov  $0, mutex
+    4                            1008 sub  $1, %bx
+    4                            1009 test $0, %bx
+    4                            1010 jgt .top
+    4                            1011 halt
+
+尝试在 0 上锁和访问 count 时切换至 1, 代码正常运行
+
+8.
+
+早忘了, 看不懂 :(
+
+想起来了, peterson 算法标记自身 flag 为 1 之后, 检查另一个 flag 是否为 1 以及 tern 是否为另一个线程, 如果这二者都是真, 则自旋等待; 如果另一方没有等待, 则成功进入临界区; 如果 tern 被另一个线程交还, 也可以进入临界区
+
+设置 tern 的目的在于防止中断导致二者同时进入临界区, 通过将 tern 让出, 二者只有一方被标记可以进入临界区, 也避免双方互相锁死; 通过设置各自的 flag 用于判断对方是否可以进入临界区
+
+9.
+
+$ ./x86.py -p peterson.s -a bx=0,bx=1 -M count -i 10 -c
+ARG seed 0
+ARG numthreads 2
+ARG program peterson.s
+ARG interrupt frequency 10
+ARG interrupt randomness False
+ARG procsched
+ARG argv bx=0,bx=1
+ARG load address 1000
+ARG memsize 128
+ARG memtrace count
+ARG regtrace
+ARG cctrace False
+ARG printstats False
+ARG verbose False
+
+
+count          Thread 0                Thread 1
+
+    0
+    0   1000 lea flag, %fx
+    0   1001 mov %bx, %cx
+    0   1002 neg %cx
+    0   1003 add $1, %cx
+    0   1004 mov $1, 0(%fx,%bx,4)
+    0   1005 mov %cx, turn
+    0   1006 mov 0(%fx,%cx,4), %ax
+    0   1007 test $1, %ax
+    0   1008 jne .fini
+    0   1012 mov count, %ax
+    0   ------ Interrupt ------  ------ Interrupt ------
+    0                            1000 lea flag, %fx
+    0                            1001 mov %bx, %cx
+    0                            1002 neg %cx
+    0                            1003 add $1, %cx
+    0                            1004 mov $1, 0(%fx,%bx,4)
+    0                            1005 mov %cx, turn
+    0                            1006 mov 0(%fx,%cx,4), %ax
+    0                            1007 test $1, %ax
+    0                            1008 jne .fini
+    0                            1009 mov turn, %ax
+    0   ------ Interrupt ------  ------ Interrupt ------
+    0   1013 add $1, %ax
+    1   1014 mov %ax, count
+    1   1015 mov $0, 0(%fx,%bx,4)
+    1   1016 mov %cx, turn
+    1   1017 halt
+    1   ----- Halt;Switch -----  ----- Halt;Switch -----
+    1                            1010 test %cx, %ax
+    1                            1011 je .spin1
+    1                            1006 mov 0(%fx,%cx,4), %ax
+    1                            1007 test $1, %ax
+    1                            1008 jne .fini
+    1   ------ Interrupt ------  ------ Interrupt ------
+    1                            1012 mov count, %ax
+    1                            1013 add $1, %ax
+    2                            1014 mov %ax, count
+    2                            1015 mov $0, 0(%fx,%bx,4)
+    2                            1016 mov %cx, turn
+    2                            1017 halt
+
+在各种情况下, peterson 算法都可以正常运行
+
+10.
+
+peterson 算法的重点在于设置自己的 flag 后转换 tern, 所以
+
+1.
+
+11.
+
+12.
+
+13.
+
+14.
+
+15.

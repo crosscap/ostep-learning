@@ -1,0 +1,29 @@
+int FetchAndAdd(int *ptr)
+{
+	int old = *ptr;
+	*ptr = old + 1;
+	return old;
+}
+
+typedef struct lock_t {
+	int ticket;
+	int turn;
+} lock_t;
+
+void init(lock_t *lock)
+{
+	lock->ticket = 0;
+	lock->turn = 0;
+}
+
+void lock(lock_t *lock)
+{
+	int myturn = FetchAndAdd(&lock->ticket);
+	while (lock->turn != myturn)
+		; // spin-wait (do nothing)
+}
+
+void unlock(lock_t *lock)
+{
+	FetchAndAdd(&lock->turn);
+}
