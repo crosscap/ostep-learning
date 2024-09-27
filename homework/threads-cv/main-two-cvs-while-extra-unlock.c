@@ -29,7 +29,7 @@ void do_fill(int value) {
 int do_get() {
     int tmp = buffer[use_ptr];
     ensure(tmp != EMPTY, "error: tried to get an empty buffer");
-    buffer[use_ptr] = EMPTY; 
+    buffer[use_ptr] = EMPTY;
     use_ptr = (use_ptr + 1) % max;
     num_full--;
     return tmp;
@@ -38,7 +38,7 @@ int do_get() {
 void *producer(void *arg) {
     int id = (int) arg;
     // make sure each producer produces unique values
-    int base = id * loops; 
+    int base = id * loops;
     int i;
     for (i = 0; i < loops; i++) {   p0;
 	Mutex_lock(&m);             p1;
@@ -53,7 +53,7 @@ void *producer(void *arg) {
     }
     return NULL;
 }
-                                                                               
+
 void *consumer(void *arg) {
     int id = (int) arg;
     int tmp = 0;
@@ -82,4 +82,3 @@ pthread_cond_t *empty_cv = &empty;
 // all codes use this common base to start producers/consumers
 // and all the other related stuff
 #include "main-common.c"
-

@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
 
     if (producer_pause_string != NULL)
 	parse_pause_string(producer_pause_string, "producers", producers, producer_pause_times);
-    if (consumer_pause_string != NULL) 
+    if (consumer_pause_string != NULL)
 	parse_pause_string(consumer_pause_string, "consumers", consumers, consumer_pause_times);
 
     // make space for shared buffer, and init it ...
@@ -85,17 +85,17 @@ int main(int argc, char *argv[]) {
     pthread_t pid[MAX_THREADS], cid[MAX_THREADS];
     int thread_id = 0;
     for (i = 0; i < producers; i++) {
-	Pthread_create(&pid[i], NULL, producer, (void *) (long long) thread_id); 
+	Pthread_create(&pid[i], NULL, producer, (void *) (long long) thread_id);
 	thread_id++;
     }
     for (i = 0; i < consumers; i++) {
-	Pthread_create(&cid[i], NULL, consumer, (void *) (long long) thread_id); 
+	Pthread_create(&cid[i], NULL, consumer, (void *) (long long) thread_id);
 	thread_id++;
     }
 
     // now wait for all PRODUCERS to finish
     for (i = 0; i < producers; i++) {
-	Pthread_join(pid[i], NULL); 
+	Pthread_join(pid[i], NULL);
     }
 
     // end case: when producers are all done
@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
     // - when consumer sees -1, it exits
     for (i = 0; i < consumers; i++) {
 	Mutex_lock(&m);
-	while (num_full == max) 
+	while (num_full == max)
 	    Cond_wait(empty_cv, &m);
 	do_fill(END_OF_STREAM);
 	do_eos();
@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
     // now OK to wait for all consumers
     int counts[consumers];
     for (i = 0; i < consumers; i++) {
-	Pthread_join(cid[i], (void *) &counts[i]); 
+	Pthread_join(cid[i], (void *) &counts[i]);
     }
 
     double t2 = Time_GetSeconds();
@@ -133,4 +133,3 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-
