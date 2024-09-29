@@ -12,8 +12,8 @@ int max;
 int loops;
 int *buffer;
 
-int use = 0;
-int fill = 0;
+int use_ptr = 0;
+int fill_ptr = 0;
 int count = 0;
 
 pthread_cond_t empty = PTHREAD_COND_INITIALIZER;
@@ -25,15 +25,15 @@ int verbose = 1;
 
 void do_fill(int value)
 {
-	buffer[fill] = value;
-	fill = (fill + 1) % max;
+	buffer[fill_ptr] = value;
+	fill_ptr = (fill_ptr + 1) % max;
 	count++;
 }
 
 int do_get()
 {
-	int tmp = buffer[use];
-	use = (use + 1) % max;
+	int tmp = buffer[use_ptr];
+	use_ptr = (use_ptr + 1) % max;
 	count--;
 	return tmp;
 }
