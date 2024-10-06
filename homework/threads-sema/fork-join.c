@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <pthread.h>
+
 #include "common_threads.h"
 
-sem_t s; 
+sem_t s;
 
 void *child(void *arg) {
     printf("child\n");

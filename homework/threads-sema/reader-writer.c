@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
 #include "common_threads.h"
 
 //
@@ -28,7 +29,7 @@ void rwlock_release_writelock(rwlock_t *rw) {
 
 //
 // Don't change the code below (just use it!)
-// 
+//
 
 int loops;
 int value = 0;
