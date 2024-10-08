@@ -1,0 +1,257 @@
+file-disks
+
+1.
+
+$ ./disk.py -a 0 -G
+...
+REQUESTS ['0']
+
+Block:  0  Seek:  0  Rotate:165  Transfer: 30  Total: 195
+
+TOTALS     Seek:  0  Rotate:165  Transfer: 30  Total: 195
+
+$ ./disk.py -a 6 -G
+...
+REQUESTS ['6']
+
+Block:  6  Seek:  0  Rotate:345  Transfer: 30  Total: 375
+
+TOTALS     Seek:  0  Rotate:345  Transfer: 30  Total: 375
+
+$ ./disk.py -a 30 -G
+...
+REQUESTS ['30']
+
+Block:  30  Seek:  80  Rotate:265  Transfer: 30  Total: 375
+
+TOTALS      Seek:  80  Rotate:265  Transfer: 30  Total: 375
+
+$ ./disk.py -a 7,30,8 -G
+...
+REQUESTS ['7', '30', '8']
+
+Block:   7  Seek:  0   Rotate:15   Transfer: 30  Total: 45
+Block:  30  Seek:  80  Rotate:220  Transfer: 30  Total: 330
+Block:   8  Seek:  80  Rotate:310  Transfer: 30  Total: 420
+
+TOTALS      Seek: 160  Rotate:545  Transfer: 90  Total: 795
+
+2.
+
+-S 2, -S 4, -S 8, -S 10, -S 40, -S 0.1
+
+-a 0, -a 6 没有寻道时间, 不产生影响
+
+-a 30 当寻道时间较快时, 只改变了寻道时间, 但是总时间没有变化, 对于 -S 0.1, 寻道时间变为 400, 对运行时间产生较大影响
+
+-a 7,30,8 当寻道时间较快时, 可能避免旋转一圈的旋转时间, 而寻道时间较慢时, 可能增加旋转时间, 需要各自计算
+
+$ ./disk.py -a 30 -G # 程序计算有误差, 这里的应该是正确的
+...
+REQUESTS ['30']
+
+Block:  30  Seek:  800  Rotate:265  Transfer: 30  Total: 1095
+
+TOTALS      Seek:  800  Rotate:265  Transfer: 30  Total: 1095
+
+$ ./disk.py -S 2 -a 7,30,8 -G
+...
+REQUESTS ['7', '30', '8']
+
+Block:   7  Seek:  0   Rotate:15   Transfer: 30  Total: 45
+Block:  30  Seek:  40  Rotate:260  Transfer: 30  Total: 330
+Block:   8  Seek:  40  Rotate:350  Transfer: 30  Total: 420
+
+TOTALS      Seek:  80  Rotate:625  Transfer: 90  Total: 795
+
+$ ./disk.py -S 4 -a 7,30,8 -G
+...
+REQUESTS ['7', '30', '8']
+
+Block:   7  Seek:  0   Rotate: 15  Transfer: 30  Total: 45
+Block:  30  Seek:  20  Rotate:280  Transfer: 30  Total: 330
+Block:   8  Seek:  20  Rotate: 10  Transfer: 30  Total: 60
+
+TOTALS      Seek:  40  Rotate:305  Transfer: 90  Total: 435
+
+$ ./disk.py -S 8 -a 7,30,8 -G
+...
+REQUESTS ['7', '30', '8']
+
+Block:   7  Seek:  0   Rotate: 15  Transfer: 30  Total: 45
+Block:  30  Seek:  10  Rotate:290  Transfer: 30  Total: 330
+Block:   8  Seek:  10  Rotate: 20  Transfer: 30  Total: 60
+
+TOTALS      Seek:  20  Rotate:325  Transfer: 90  Total: 435
+
+$ ./disk.py -S 10 -a 7,30,8 -G
+...
+REQUESTS ['7', '30', '8']
+
+Block:   7  Seek:   0  Rotate: 15  Transfer: 30  Total: 45
+Block:  30  Seek:   8  Rotate:292  Transfer: 30  Total: 330
+Block:   8  Seek:   8  Rotate: 22  Transfer: 30  Total: 60
+
+TOTALS      Seek:  16  Rotate:329  Transfer: 90  Total: 435
+
+$ ./disk.py -S 40 -a 7,30,8 -G
+...
+REQUESTS ['7', '30', '8']
+
+Block:   7  Seek:  0   Rotate: 15  Transfer: 30  Total: 45
+Block:  30  Seek:  2   Rotate:298  Transfer: 30  Total: 330
+Block:   8  Seek:  2   Rotate: 28  Transfer: 30  Total: 60
+
+TOTALS      Seek:  4   Rotate:341  Transfer: 90  Total: 435
+
+$ ./disk.py -S 0.1 -a 7,30,8 -G
+...
+REQUESTS ['7', '30', '8']
+
+Block:   7  Seek:  0    Rotate:15   Transfer: 30  Total: 45
+Block:  30  Seek:  800  Rotate:220  Transfer: 30  Total: 1050
+Block:   8  Seek:  800  Rotate:310  Transfer: 30  Total: 1140
+
+TOTALS      Seek: 1600  Rotate:545  Transfer: 90  Total: 2235
+
+3.
+
+-R 0.1, -R 0.5, -R 0.01
+
+旋转速度变慢, Rotate 时间变长, Transfer 时间变长
+
+$ ./disk.py -R 0.1 -a 0 -G
+...
+REQUESTS ['0']
+
+Block:  0  Seek:  0  Rotate:1650  Transfer: 300  Total: 1950
+
+TOTALS     Seek:  0  Rotate:1650  Transfer: 300  Total: 1950
+
+4.
+
+$ ./disk.py -p SSTF -a 7,30,8 -G
+...
+REQUESTS ['7', '30', '8']
+
+Block:   7  Seek:  0   Rotate:15   Transfer: 30  Total: 45
+Block:   8  Seek:  0   Rotate:0    Transfer: 30  Total: 30
+Block:  30  Seek:  80  Rotate:190  Transfer: 30  Total: 300
+
+
+TOTALS      Seek:  80  Rotate:205  Transfer: 90  Total: 375
+
+5.
+
+$ ./disk.py -p SATF -a 7,30,8 -G
+...
+REQUESTS ['7', '30', '8']
+
+Block:   7  Seek:  0   Rotate:15   Transfer: 30  Total: 45
+Block:   8  Seek:  0   Rotate:0    Transfer: 30  Total: 30
+Block:  30  Seek:  80  Rotate:190  Transfer: 30  Total: 300
+
+
+TOTALS      Seek:  80  Rotate:205  Transfer: 90  Total: 375
+
+相同
+
+$ ./disk.py -p SSTF -a 7,35,15 -G
+...
+REQUESTS ['7', '35', '15']
+
+Block:   7  Seek:  0  Rotate: 15  Transfer: 30  Total:  45
+Block:  15  Seek: 40  Rotate:170  Transfer: 30  Total: 240
+Block:  35  Seek: 40  Rotate:170  Transfer: 30  Total: 240
+
+TOTALS      Seek: 80  Rotate:355  Transfer: 90  Total: 525
+
+$ ./disk.py -p SATF -a 7,35,15 -G
+...
+REQUESTS ['7', '35', '15']
+
+Block:   7  Seek:  0  Rotate: 15  Transfer: 30  Total:  45
+Block:  35  Seek: 80  Rotate: 10  Transfer: 30  Total: 120
+Block:  15  Seek: 40  Rotate: 50  Transfer: 30  Total: 120
+
+TOTALS      Seek:120  Rotate: 75  Transfer: 90  Total: 285
+
+6.
+
+跨越一个扇区的旋转时间小于跨越一个 track 的寻道时间, 导致了从 11 到达 12 后需要再旋转接近一周
+
+-o 2 即可
+
+$ ./disk.py -a 10,11,12,13 -G
+...
+REQUESTS ['10', '11', '12', '13']
+
+Block:  10  Seek:  0  Rotate:105  Transfer: 30  Total: 135
+Block:  11  Seek:  0  Rotate:  0  Transfer: 30  Total:  30
+Block:  12  Seek: 40  Rotate:320  Transfer: 30  Total: 390
+Block:  13  Seek:  0  Rotate:  0  Transfer: 30  Total:  30
+
+TOTALS      Seek: 40  Rotate:425  Transfer:120  Total: 585
+
+$ ./disk.py -o 2 -a 10,11,12,13 -G
+...
+REQUESTS ['10', '11', '12', '13']
+
+Block:  10  Seek:  0  Rotate:105  Transfer: 30  Total: 135
+Block:  11  Seek:  0  Rotate:  0  Transfer: 30  Total:  30
+Block:  12  Seek: 40  Rotate: 20  Transfer: 30  Total:  90
+Block:  13  Seek:  0  Rotate:  0  Transfer: 30  Total:  30
+
+TOTALS      Seek: 40  Rotate:125  Transfer:120  Total: 285
+
+$ ./disk.py -S 2 -o 1 -a 10,11,12,13 -G
+
+skew 的计算式为
+
+$$
+skew = \lceil \frac{\text{Seek Speed}}{\text{Rotate Speed}} \rceil
+$$
+
+7.
+
+$ ./disk.py -z 10,20,30 -a -1 -A 5,-1,0 -G
+...
+REQUESTS [45, 40, 22, 13, 27]
+
+Block:  45  Seek: 40  Rotate:310  Transfer: 20  Total: 370
+Block:  40  Seek:  0  Rotate:240  Transfer: 20  Total: 260
+Block:  22  Seek: 40  Rotate: 85  Transfer: 10  Total: 135
+Block:  13  Seek:  0  Rotate:260  Transfer: 10  Total: 270
+Block:  27  Seek:  0  Rotate:130  Transfer: 10  Total: 140
+
+TOTALS      Seek: 80  Rotate:1025 Transfer: 70  Total: 1175
+
+
+从内到外磁道的带宽 (每单位时间的扇区数) 是多少 1/10, 1/20, 1/30
+
+8.
+
+$ ./disk.py -p SATF -A 1000,-1,0 -w 1 -c
+TOTALS      Seek:20960  Rotate:169165  Transfer:30000  Total:220125
+
+$ ./disk.py -p SATF -A 1000,-1,0 -w 10 -c
+TOTALS      Seek:8080  Rotate:26555  Transfer:30000  Total:64635
+
+$ ./disk.py -p SATF -A 1000,-1,0 -w 100 -c
+TOTALS      Seek:1440  Rotate:5835  Transfer:30000  Total:37275
+
+$ ./disk.py -p SATF -A 1000,-1,0 -w 1000 -c
+TOTALS      Seek:1520  Rotate:3955  Transfer:30000  Total:35475
+
+随着窗口变大, 性能变好
+
+9.
+$ ./disk.py -p SATF -a 31,7,8,9,10,0,1 -G
+
+解决了饥饿问题, 但是在窗口之间切换时可能产生较严重的性能问题
+
+选择合适的窗口值
+
+10.
+
+$ ./disk.py -a 9,20 -c
