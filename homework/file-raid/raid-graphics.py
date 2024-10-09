@@ -1,15 +1,19 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 from Tkinter import *
 from types import *
-import math, random, time, sys, os
+import math
+import random
+import time
+import sys
+import os
 from optparse import OptionParser
 
 # states that a request/disk go through
-STATE_NULL   = 0
-STATE_SEEK   = 1
-STATE_XFER   = 2
-STATE_DONE   = 3
+STATE_NULL = 0
+STATE_SEEK = 1
+STATE_XFER = 2
+STATE_DONE = 3
 
 # request states
 REQ_NOT_STARTED = 0
@@ -25,10 +29,11 @@ REQ_DONE = 10
 OP_READ = 1
 OP_WRITE = 2
 
+
 class Request:
     def __init__(self, logical_address, op_type):
         self.logical_address = logical_address
-        assert(op_type == OP_WRITE or op_type == OP_READ)
+        assert (op_type == OP_WRITE or op_type == OP_READ)
         self.op_type = op_type
         self.disk_to_index_map = {}
         self.full_stripe_write = False
@@ -107,7 +112,7 @@ class Request:
             self.status[index] = REQ_DONE
             return (True, timer - self.start_time)
         # this is for WRITES (only done when BOTH writes are done)
-        assert(self.status[index] == REQ_DO_WRITE)
+        assert (self.status[index] == REQ_DO_WRITE)
         self.status[index] = REQ_DONE
         if self.status[1-index] == REQ_DONE:
             return (True, timer - self.start_time)
@@ -151,7 +156,7 @@ class Raid:
         self.animate_delay = animate_delay
 
         random.seed(seed)
-        
+
         self.root = Tk()
         self.canvas = Canvas(self.root, width=560, height=530)
         self.canvas.pack()
@@ -181,8 +186,10 @@ class Raid:
                 rect_x = 40 + ((20 + disk_width) * disk)
                 rect_y = (20 * offset) + 100
                 self.color_map[(disk, offset)] = 'gray'
-                rect_id = self.canvas.create_rectangle(rect_x, rect_y, rect_x+disk_width, rect_y+20, fill='gray', outline='black')
-                text_id = self.canvas.create_text(rect_x + disk_width - disk_width/2.0, rect_y+10, text='%s' % i, anchor='c')
+                rect_id = self.canvas.create_rectangle(
+                    rect_x, rect_y, rect_x+disk_width, rect_y+20, fill='gray', outline='black')
+                text_id = self.canvas.create_text(
+                    rect_x + disk_width - disk_width/2.0, rect_y+10, text='%s' % i, anchor='c')
                 self.block_offset[i] = rect_y
                 self.offset_to_ypos[offset] = rect_y
                 self.disk_and_offset_to_rect_id[(disk, offset)] = rect_id
@@ -191,7 +198,7 @@ class Raid:
             # CREATE MIRRORED CONFIGURATION
             self.block_count = 40
             effective_disks = self.disk_count / 2
-            assert(self.disk_count % 2 == 0)
+            assert (self.disk_count % 2 == 0)
             for i in range(self.block_count):
                 INDEX = i % effective_disks
                 disk_1 = INDEX * 2
@@ -201,13 +208,17 @@ class Raid:
 
                 rect_x = 40 + ((20 + disk_width) * disk_1)
                 self.color_map[(disk_1, offset)] = 'gray'
-                rect_id_1 = self.canvas.create_rectangle(rect_x, rect_y, rect_x+disk_width, rect_y+20, fill='gray', outline='black')
-                text_id_1 = self.canvas.create_text(rect_x + disk_width - disk_width/2.0, rect_y+10, text='%s' % i, anchor='c')
+                rect_id_1 = self.canvas.create_rectangle(
+                    rect_x, rect_y, rect_x+disk_width, rect_y+20, fill='gray', outline='black')
+                text_id_1 = self.canvas.create_text(
+                    rect_x + disk_width - disk_width/2.0, rect_y+10, text='%s' % i, anchor='c')
 
                 rect_x = 40 + ((20 + disk_width) * disk_2)
                 self.color_map[(disk_2, offset)] = 'gray'
-                rect_id_2 = self.canvas.create_rectangle(rect_x, rect_y, rect_x+disk_width, rect_y+20, fill='gray', outline='black')
-                text_id_2 = self.canvas.create_text(rect_x + disk_width - disk_width/2.0, rect_y+10, text='%s' % i, anchor='c')
+                rect_id_2 = self.canvas.create_rectangle(
+                    rect_x, rect_y, rect_x+disk_width, rect_y+20, fill='gray', outline='black')
+                text_id_2 = self.canvas.create_text(
+                    rect_x + disk_width - disk_width/2.0, rect_y+10, text='%s' % i, anchor='c')
 
                 self.block_offset[i] = rect_y
                 self.offset_to_ypos[offset] = rect_y
@@ -224,8 +235,10 @@ class Raid:
                 rect_x = 40 + ((20 + disk_width) * disk)
                 rect_y = (20 * offset) + 100
                 self.color_map[(disk, offset)] = 'lightgray'
-                rect_id = self.canvas.create_rectangle(rect_x, rect_y, rect_x+disk_width, rect_y+20, fill='lightgray', outline='black')
-                text_id = self.canvas.create_text(rect_x + disk_width - disk_width/2.0, rect_y+10, text='%s' % i, anchor='c')
+                rect_id = self.canvas.create_rectangle(
+                    rect_x, rect_y, rect_x+disk_width, rect_y+20, fill='lightgray', outline='black')
+                text_id = self.canvas.create_text(
+                    rect_x + disk_width - disk_width/2.0, rect_y+10, text='%s' % i, anchor='c')
                 self.block_offset[i] = rect_y
                 self.offset_to_ypos[offset] = rect_y
                 self.disk_and_offset_to_rect_id[(disk, offset)] = rect_id
@@ -237,12 +250,14 @@ class Raid:
                 rect_x = 40 + ((20 + disk_width) * disk)
                 rect_y = (20 * offset) + 100
                 self.color_map[(disk, offset)] = 'darkgray'
-                rect_id = self.canvas.create_rectangle(rect_x, rect_y, rect_x+disk_width, rect_y+20, fill='darkgray', outline='black')
-                text_id = self.canvas.create_text(rect_x + disk_width - disk_width/2.0, rect_y+10, text='P%s' % i, anchor='c')
+                rect_id = self.canvas.create_rectangle(
+                    rect_x, rect_y, rect_x+disk_width, rect_y+20, fill='darkgray', outline='black')
+                text_id = self.canvas.create_text(
+                    rect_x + disk_width - disk_width/2.0, rect_y+10, text='P%s' % i, anchor='c')
                 self.block_offset['p' + str(i)] = rect_y
                 self.offset_to_ypos[offset] = rect_y
                 self.disk_and_offset_to_rect_id[(disk, offset)] = rect_id
-            
+
         elif self.mapping == 5:
             # CREATE RAID-5 config
             self.block_count_full = 80
@@ -265,8 +280,10 @@ class Raid:
                 rect_x = 40 + ((20 + disk_width) * disk)
                 rect_y = (20 * offset) + 100
                 self.color_map[(disk, offset)] = 'gray'
-                rect_id = self.canvas.create_rectangle(rect_x, rect_y, rect_x+disk_width, rect_y+20, fill='gray', outline='black')
-                text_id = self.canvas.create_text(rect_x + disk_width - disk_width/2.0, rect_y+10, text='%s' % i, anchor='c')
+                rect_id = self.canvas.create_rectangle(
+                    rect_x, rect_y, rect_x+disk_width, rect_y+20, fill='gray', outline='black')
+                text_id = self.canvas.create_text(
+                    rect_x + disk_width - disk_width/2.0, rect_y+10, text='%s' % i, anchor='c')
                 self.block_offset[i] = rect_y
                 self.offset_to_ypos[offset] = rect_y
                 self.disk_and_offset_to_rect_id[(disk, offset)] = rect_id
@@ -285,12 +302,14 @@ class Raid:
                 rect_x = 40 + ((20 + disk_width) * disk)
                 rect_y = (20 * offset) + 100
                 self.color_map[(disk, offset)] = 'darkgray'
-                rect_id = self.canvas.create_rectangle(rect_x, rect_y, rect_x+disk_width, rect_y+20, fill='darkgray', outline='black')
-                text_id = self.canvas.create_text(rect_x + disk_width - disk_width/2.0, rect_y+10, text='P%s' % i, anchor='c')
+                rect_id = self.canvas.create_rectangle(
+                    rect_x, rect_y, rect_x+disk_width, rect_y+20, fill='darkgray', outline='black')
+                text_id = self.canvas.create_text(
+                    rect_x + disk_width - disk_width/2.0, rect_y+10, text='P%s' % i, anchor='c')
                 self.block_offset['p' + str(i)] = rect_y
                 self.offset_to_ypos[offset] = rect_y
                 self.disk_and_offset_to_rect_id[(disk, offset)] = rect_id
-            
+
         else:
             print 'mapping', self.mapping, 'not supported'
             exit(1)
@@ -306,7 +325,8 @@ class Raid:
                                                    rect_x+self.head_width, rect_y+self.head_height,
                                                    fill='black', outline='black')
             self.head_ids[disk] = head_id
-            self.head_position[disk] = {'x1':rect_x, 'y1':rect_y, 'x2':rect_x+self.head_width, 'y2':rect_y+self.head_height}
+            self.head_position[disk] = {
+                'x1': rect_x, 'y1': rect_y, 'x2': rect_x+self.head_width, 'y2': rect_y+self.head_height}
             self.disk_state[disk] = STATE_NULL
 
         # seek targets
@@ -333,7 +353,7 @@ class Raid:
         effective_disk_count = 4
         if self.mapping == 4:
             effective_disk_count = 3
-        
+
         if self.addr == '':
             # use 'addr_desc' (num to generate, max, min) to generate these
             tmp = self.addr_desc.split(',')
@@ -369,9 +389,11 @@ class Raid:
             tmp = self.addr.split(',')
             for i in range(len(tmp)):
                 if tmp[i][0] == 'r':
-                    self.request_queue[i] = Request(int(tmp[i].replace('r','')), OP_READ)
+                    self.request_queue[i] = Request(
+                        int(tmp[i].replace('r', '')), OP_READ)
                 elif tmp[i][0] == 'w':
-                    self.request_queue[i] = Request(int(tmp[i].replace('w','')), OP_WRITE)
+                    self.request_queue[i] = Request(
+                        int(tmp[i].replace('w', '')), OP_WRITE)
                 else:
                     print 'Must specify reads vs writes, e.g., r10 or w6'
                     exit(1)
@@ -384,7 +406,7 @@ class Raid:
             for i in range(len(self.request_queue)):
                 request = self.request_queue[i]
                 logical = request.GetLogicalAddress()
-                assert(logical < self.block_count)
+                assert (logical < self.block_count)
                 disk = logical % self.disk_count
                 offset = logical / self.disk_count
                 request.SetPhysicalAddress([disk], offset)
@@ -396,7 +418,7 @@ class Raid:
                     self.request_count_needed += 1
                 effective_disks = self.disk_count / 2
                 logical = request.GetLogicalAddress()
-                assert(logical < self.block_count)
+                assert (logical < self.block_count)
                 disk_1 = 2 * (logical % effective_disks)
                 disk_2 = disk_1 + 1
                 offset = logical / effective_disks
@@ -408,14 +430,14 @@ class Raid:
                 if request.GetType() == OP_WRITE:
                     self.request_count_needed += 3
                 logical = request.GetLogicalAddress()
-                assert(logical < self.block_count)
+                assert (logical < self.block_count)
                 disk = logical % (self.disk_count-1)
                 offset = logical / (self.disk_count-1)
                 request.SetPhysicalAddress([disk, 3], offset)
 
             # XXX This really only works for SOME demos
             # (it is not a general purpose feature)
-            for i in range(0,len(self.request_queue),3):
+            for i in range(0, len(self.request_queue), 3):
                 if i+2 >= len(self.request_queue):
                     continue
                 logical = self.request_queue[i].GetLogicalAddress()
@@ -434,7 +456,7 @@ class Raid:
                 if request.GetType() == OP_WRITE:
                     self.request_count_needed += 3
                 logical = request.GetLogicalAddress()
-                assert(logical < self.block_count)
+                assert (logical < self.block_count)
                 disk = logical % (self.disk_count-1)
                 offset = logical / (self.disk_count-1)
                 if offset % 4 == 0:
@@ -453,7 +475,6 @@ class Raid:
 
                 # print 'LOGICAL', logical, 'offset', offset, 'disk', disk, 'paritydisk', parity_disk
                 request.SetPhysicalAddress([disk, parity_disk], offset)
-
 
         # draw request queue
         self.request_queue_box_ids = []
@@ -476,13 +497,16 @@ class Raid:
 
             request = self.request_queue[index]
             logical = request.GetLogicalAddress()
-            self.request_queue_box_ids.append(self.canvas.create_rectangle(x-sz,y-sz,x+sz,y+sz,fill='white',outline=''))
-            self.request_queue_text_ids.append(self.canvas.create_text(x, y, text=str(logical), anchor='c', font=font))
-            self.request_queue_count_ids.append(self.canvas.create_text(x+8, y+8, text=str(0), anchor='c', font=font_small))
+            self.request_queue_box_ids.append(self.canvas.create_rectangle(
+                x-sz, y-sz, x+sz, y+sz, fill='white', outline=''))
+            self.request_queue_text_ids.append(self.canvas.create_text(
+                x, y, text=str(logical), anchor='c', font=font))
+            self.request_queue_count_ids.append(self.canvas.create_text(
+                x+8, y+8, text=str(0), anchor='c', font=font_small))
             self.request_queue_counts.append(0)
-                
-            x += (2*sz) 
-            
+
+            x += (2*sz)
+
         # BINDINGS
         self.root.bind('s', self.Start)
         self.root.bind('p', self.Pause)
@@ -493,7 +517,8 @@ class Raid:
         self.DrawWindow()
 
         # TIME INFO and other stats
-        self.timeID = self.canvas.create_text(10, 10, text='Time: 0.00', anchor='w')
+        self.timeID = self.canvas.create_text(
+            10, 10, text='Time: 0.00', anchor='w')
         self.timer = 0
 
         self.logical_requests = 0
@@ -509,12 +534,15 @@ class Raid:
         for i in range(self.disk_count):
             self.count_reads[i] = 0
             self.count_writes[i] = 0
-            self.canvas.create_rectangle(x-50,510,x,530, fill='orange', outline='')
-            self.canvas.create_rectangle(x+50,510,x,530, fill='yellow', outline='')
-            self.count_reads_id[i] = self.canvas.create_text(x-20, 520, text='R:0', anchor='c', font=font)
-            self.count_writes_id[i] = self.canvas.create_text(x+20, 520, text='W:0', anchor='c', font=font)
+            self.canvas.create_rectangle(
+                x-50, 510, x, 530, fill='orange', outline='')
+            self.canvas.create_rectangle(
+                x+50, 510, x, 530, fill='yellow', outline='')
+            self.count_reads_id[i] = self.canvas.create_text(
+                x-20, 520, text='R:0', anchor='c', font=font)
+            self.count_writes_id[i] = self.canvas.create_text(
+                x+20, 520, text='W:0', anchor='c', font=font)
             x += disk_width + 20
-        
 
         # set up animation loop
         self.do_animate = True
@@ -550,18 +578,20 @@ class Raid:
     #
     def UpdateWriteCounter(self, disk, how_much):
         self.count_writes[disk] += how_much
-        self.canvas.itemconfig(self.count_writes_id[disk], text='W:%d' % self.count_writes[disk])
+        self.canvas.itemconfig(
+            self.count_writes_id[disk], text='W:%d' % self.count_writes[disk])
         return
 
     def UpdateReadCounter(self, disk, how_much):
         self.count_reads[disk] += how_much
-        self.canvas.itemconfig(self.count_reads_id[disk], text='R:%d' % self.count_reads[disk])
+        self.canvas.itemconfig(
+            self.count_reads_id[disk], text='R:%d' % self.count_reads[disk])
         return
 
     def UpdateTime(self):
         self.canvas.itemconfig(self.timeID, text='Time: ' + str(self.timer))
         return
-    
+
     def DrawWindow(self):
         return
 
@@ -575,7 +605,8 @@ class Raid:
         self.canvas.itemconfig(box_id, fill=fill_color)
         self.request_queue_counts[index] += 1
         count_id = self.request_queue_count_ids[index]
-        self.canvas.itemconfig(count_id, text='%d' % self.request_queue_counts[index])
+        self.canvas.itemconfig(count_id, text='%d' %
+                               self.request_queue_counts[index])
         return
 
     def SetSeekDirection(self, disk, dest_block):
@@ -587,12 +618,14 @@ class Raid:
 
     def StartRead(self, disk, offset, logical_address, request, queue_index):
         self.current_optype[disk] = OP_READ
-        self.StartRequest(disk, offset, logical_address, request, queue_index, 'orange')
+        self.StartRequest(disk, offset, logical_address,
+                          request, queue_index, 'orange')
         return
 
     def StartWrite(self, disk, offset, logical_address, request, queue_index):
         self.current_optype[disk] = OP_WRITE
-        self.StartRequest(disk, offset, logical_address, request, queue_index, 'yellow')
+        self.StartRequest(disk, offset, logical_address,
+                          request, queue_index, 'yellow')
         return
 
     def StartRequest(self, disk, offset, logical_address, request, queue_index, fill_color):
@@ -603,7 +636,7 @@ class Raid:
         self.last_target[disk] = self.current_target[disk]
         self.current_target[disk] = request
         return
-        
+
     def DoStripeScheduling(self, disk, index):
         request = self.request_queue[index]
         logical = request.GetLogicalAddress()
@@ -618,7 +651,7 @@ class Raid:
                 self.StartWrite(disk, offset, logical, request, index)
             return
         return
-        
+
     def DoMirrorScheduling(self, disk, index):
         request = self.request_queue[index]
         logical = request.GetLogicalAddress()
@@ -753,7 +786,6 @@ class Raid:
             self.StartWrite(disk, offset, logical, request, index)
             return
         return
-        
 
     def GetNextIOs(self):
         # check if done: if so, print stats and end animation
@@ -823,7 +855,7 @@ class Raid:
     def MarkDone(self, disk):
         request = self.current_target[disk]
         low_level_op_type = self.current_optype[disk]
-        
+
         if low_level_op_type == OP_WRITE:
             self.UpdateWriteCounter(disk, 1)
         elif low_level_op_type == OP_READ:
@@ -860,7 +892,8 @@ class Raid:
             if self.disk_state[disk] == STATE_SEEK:
                 if self.DoneWithSeek(disk):
                     self.disk_state[disk] = STATE_XFER
-                    block_id = self.disk_and_offset_to_rect_id[(disk, self.current_target[disk].GetPhysicalOffset())]
+                    block_id = self.disk_and_offset_to_rect_id[(
+                        disk, self.current_target[disk].GetPhysicalOffset())]
                     self.StartTransfer(disk)
                 else:
                     self.MoveHead(disk)
@@ -871,7 +904,8 @@ class Raid:
                     self.MarkDone(disk)
                     self.request_count += 1
                     self.disk_state[disk] = STATE_NULL
-                    self.BlockSetColor(disk, self.current_target[disk].GetPhysicalOffset(), self.color_map[(disk, offset)])
+                    self.BlockSetColor(disk, self.current_target[disk].GetPhysicalOffset(
+                    ), self.color_map[(disk, offset)])
                     self.GetNextIOs()
 
         # make sure to keep the animation going!
@@ -886,28 +920,40 @@ class Raid:
         print '  Requests:   ', self.logical_requests
         print '  Avg Latency: %.2f' % (float(self.latency_total) / float(self.logical_requests))
         return
-        
+
 # END: class Disk
 
 
-    
 #
 # MAIN SIMULATOR
 #
 parser = OptionParser()
-parser.add_option('-s', '--seed',            default='0',         help='Random seed',                                             action='store', type='int',    dest='seed')
-parser.add_option('-m', '--mapping',         default='0',         help='0-striping, 1-mirroring, 4-raid4, 5-raid5',               action='store', type='int',    dest='mapping')
-parser.add_option('-a', '--addr',            default='',          help='Request list (comma-separated) [-1 -> use addrDesc]',     action='store', type='string', dest='addr')
-parser.add_option('-r', '--read_fraction',   default='0.5',       help='Fraction of requests that are reads',                     action='store', type='string', dest='read_fraction')
-parser.add_option('-A', '--addr_desc',       default='5,-1,0',    help='Num requests, max request (-1->all), min request',        action='store', type='string', dest='addr_desc')
-parser.add_option('-B', '--balanced',        default=True,        help='If generating random requests, balance across disks',     action='store_true',           dest='balance')
-parser.add_option('-S', '--seek_speed',      default='4',         help='Speed of seek (1,2,4,5,10,20)',                           action='store', type='int',    dest='seek_speed')
-parser.add_option('-p', '--policy',          default='FIFO',      help='Scheduling policy (FIFO, SSTF, SATF, BSATF)',             action='store', type='string', dest='policy')
-parser.add_option('-w', '--window',          default=-1,          help='Size of scheduling window (-1 -> all)',                   action='store', type='int',    dest='window')
-parser.add_option('-D', '--delay',           default=20,          help='Animation delay; bigger is slower',                       action='store', type='int',    dest='animate_delay')
-parser.add_option('-G', '--graphics',        default=True,        help='Turn on graphics',                                        action='store_true',           dest='graphics')
-parser.add_option('-c', '--compute',         default=False,       help='Compute the answers',                                     action='store_true',           dest='compute')
-parser.add_option('-P', '--print_options',   default=False,       help='Print the options',                                       action='store_true',           dest='print_options')
+parser.add_option('-s', '--seed',            default='0',         help='Random seed',
+                  action='store', type='int',    dest='seed')
+parser.add_option('-m', '--mapping',         default='0',
+                  help='0-striping, 1-mirroring, 4-raid4, 5-raid5',               action='store', type='int',    dest='mapping')
+parser.add_option('-a', '--addr',            default='',
+                  help='Request list (comma-separated) [-1 -> use addrDesc]',     action='store', type='string', dest='addr')
+parser.add_option('-r', '--read_fraction',   default='0.5',       help='Fraction of requests that are reads',
+                  action='store', type='string', dest='read_fraction')
+parser.add_option('-A', '--addr_desc',       default='5,-1,0',
+                  help='Num requests, max request (-1->all), min request',        action='store', type='string', dest='addr_desc')
+parser.add_option('-B', '--balanced',        default=True,
+                  help='If generating random requests, balance across disks',     action='store_true',           dest='balance')
+parser.add_option('-S', '--seek_speed',      default='4',         help='Speed of seek (1,2,4,5,10,20)',
+                  action='store', type='int',    dest='seek_speed')
+parser.add_option('-p', '--policy',          default='FIFO',
+                  help='Scheduling policy (FIFO, SSTF, SATF, BSATF)',             action='store', type='string', dest='policy')
+parser.add_option('-w', '--window',          default=-1,          help='Size of scheduling window (-1 -> all)',
+                  action='store', type='int',    dest='window')
+parser.add_option('-D', '--delay',           default=20,          help='Animation delay; bigger is slower',
+                  action='store', type='int',    dest='animate_delay')
+parser.add_option('-G', '--graphics',        default=True,        help='Turn on graphics',
+                  action='store_true',           dest='graphics')
+parser.add_option('-c', '--compute',         default=False,       help='Compute the answers',
+                  action='store_true',           dest='compute')
+parser.add_option('-P', '--print_options',   default=False,       help='Print the options',
+                  action='store_true',           dest='print_options')
 (options, args) = parser.parse_args()
 
 if options.print_options:

@@ -1,0 +1,471 @@
+file-raid
+
+1.
+
+$ ./raid.py -L 0 -W s
+ARG blockSize 4096
+ARG seed 0
+ARG numDisks 4
+ARG chunkSize 4k
+ARG numRequests 10
+ARG reqSize 4k
+ARG workload s
+ARG writeFrac 0
+ARG randRange 10000
+ARG level 0
+ARG raid5 LS
+ARG reverse False
+ARG timing False
+
+0 1
+LOGICAL READ from addr:0 size:4096
+  read  [disk 0, offset 0]
+
+1 1
+LOGICAL READ from addr:1 size:4096
+  read  [disk 1, offset 0]
+
+2 1
+LOGICAL READ from addr:2 size:4096
+  read  [disk 2, offset 0]
+
+3 1
+LOGICAL READ from addr:3 size:4096
+  read  [disk 3, offset 0]
+
+4 1
+LOGICAL READ from addr:4 size:4096
+  read  [disk 0, offset 1]
+
+5 1
+LOGICAL READ from addr:5 size:4096
+  read  [disk 1, offset 1]
+
+6 1
+LOGICAL READ from addr:6 size:4096
+  read  [disk 2, offset 1]
+
+7 1
+LOGICAL READ from addr:7 size:4096
+  read  [disk 3, offset 1]
+
+8 1
+LOGICAL READ from addr:8 size:4096
+  read  [disk 0, offset 2]
+
+9 1
+LOGICAL READ from addr:9 size:4096
+  read  [disk 1, offset 2]
+
+$ ./raid.py -L 1 -R 20 -W s
+ARG blockSize 4096
+ARG seed 0
+ARG numDisks 4
+ARG chunkSize 4k
+ARG numRequests 10
+ARG reqSize 4k
+ARG workload s
+ARG writeFrac 0
+ARG randRange 20
+ARG level 1
+ARG raid5 LS
+ARG reverse False
+ARG timing False
+
+0 1
+LOGICAL READ from addr:0 size:4096
+  read  [disk 0, offset 0]
+
+1 1
+LOGICAL READ from addr:1 size:4096
+  read  [disk 2, offset 0]
+
+2 1
+LOGICAL READ from addr:2 size:4096
+  read  [disk 1, offset 1]
+
+3 1
+LOGICAL READ from addr:3 size:4096
+  read  [disk 3, offset 1]
+
+4 1
+LOGICAL READ from addr:4 size:4096
+  read  [disk 0, offset 2]
+
+5 1
+LOGICAL READ from addr:5 size:4096
+  read  [disk 2, offset 2]
+
+6 1
+LOGICAL READ from addr:6 size:4096
+  read  [disk 1, offset 3]
+
+7 1
+LOGICAL READ from addr:7 size:4096
+  read  [disk 3, offset 3]
+
+8 1
+LOGICAL READ from addr:8 size:4096
+  read  [disk 0, offset 4]
+
+9 1
+LOGICAL READ from addr:9 size:4096
+  read  [disk 2, offset 4]
+
+$ ./raid.py -L 4 -R 20 -W s
+ARG blockSize 4096
+ARG seed 0
+ARG numDisks 4
+ARG chunkSize 4k
+ARG numRequests 10
+ARG reqSize 4k
+ARG workload s
+ARG writeFrac 0
+ARG randRange 20
+ARG level 4
+ARG raid5 LS
+ARG reverse False
+ARG timing False
+
+0 1
+LOGICAL READ from addr:0 size:4096
+  read  [disk 0, offset 0]
+
+1 1
+LOGICAL READ from addr:1 size:4096
+  read  [disk 1, offset 0]
+
+2 1
+LOGICAL READ from addr:2 size:4096
+  read  [disk 2, offset 0]
+
+3 1
+LOGICAL READ from addr:3 size:4096
+  read  [disk 0, offset 1]
+
+4 1
+LOGICAL READ from addr:4 size:4096
+  read  [disk 1, offset 1]
+
+5 1
+LOGICAL READ from addr:5 size:4096
+  read  [disk 2, offset 1]
+
+6 1
+LOGICAL READ from addr:6 size:4096
+  read  [disk 0, offset 2]
+
+7 1
+LOGICAL READ from addr:7 size:4096
+  read  [disk 1, offset 2]
+
+8 1
+LOGICAL READ from addr:8 size:4096
+  read  [disk 2, offset 2]
+
+9 1
+LOGICAL READ from addr:9 size:4096
+  read  [disk 0, offset 3]
+
+$ ./raid.py -L 5 -R 20 -W s
+ARG blockSize 4096
+ARG seed 0
+ARG numDisks 4
+ARG chunkSize 4k
+ARG numRequests 10
+ARG reqSize 4k
+ARG workload s
+ARG writeFrac 0
+ARG randRange 20
+ARG level 4
+ARG raid5 LS
+ARG reverse False
+ARG timing False
+
+0 1
+LOGICAL READ from addr:0 size:4096
+  read  [disk 0, offset 0]
+1 1
+LOGICAL READ from addr:1 size:4096
+  read  [disk 1, offset 0]
+2 1
+LOGICAL READ from addr:2 size:4096
+  read  [disk 2, offset 0]
+3 1
+LOGICAL READ from addr:3 size:4096
+  read  [disk 3, offset 1]
+4 1
+LOGICAL READ from addr:4 size:4096
+  read  [disk 0, offset 1]
+5 1
+LOGICAL READ from addr:5 size:4096
+  read  [disk 1, offset 1]
+6 1
+LOGICAL READ from addr:6 size:4096
+  read  [disk 2, offset 2]
+7 1
+LOGICAL READ from addr:7 size:4096
+  read  [disk 3, offset 2]
+8 1
+LOGICAL READ from addr:8 size:4096
+  read  [disk 0, offset 2]
+9 1
+LOGICAL READ from addr:9 size:4096
+  read  [disk 1, offset 3]
+
+$ ./raid.py -L 5 -R 20 -W s -5 LA -c
+ARG blockSize 4096
+ARG seed 0
+ARG numDisks 4
+ARG chunkSize 4k
+ARG numRequests 10
+ARG reqSize 4k
+ARG workload s
+ARG writeFrac 0
+ARG randRange 20
+ARG level 5
+ARG raid5 LA
+ARG reverse False
+ARG timing False
+
+0 1
+LOGICAL READ from addr:0 size:4096
+  read  [disk 0, offset 0]
+1 1
+LOGICAL READ from addr:1 size:4096
+  read  [disk 1, offset 0]
+2 1
+LOGICAL READ from addr:2 size:4096
+  read  [disk 2, offset 0]
+3 1
+LOGICAL READ from addr:3 size:4096
+  read  [disk 0, offset 1]
+4 1
+LOGICAL READ from addr:4 size:4096
+  read  [disk 1, offset 1]
+5 1
+LOGICAL READ from addr:5 size:4096
+  read  [disk 3, offset 1]
+6 1
+LOGICAL READ from addr:6 size:4096
+  read  [disk 0, offset 2]
+7 1
+LOGICAL READ from addr:7 size:4096
+  read  [disk 2, offset 2]
+8 1
+LOGICAL READ from addr:8 size:4096
+  read  [disk 3, offset 2]
+9 1
+LOGICAL READ from addr:9 size:4096
+  read  [disk 1, offset 3]
+
+LS 的布局:
+| D0 | D1 | D2 | D3 |
+|  0 |  1 |  2 | P0 |
+|  4 |  5 | P1 |  3 |
+|  8 | P2 |  6 |  7 |
+| P3 |  9 | 10 | 11 |
+| 12 | 13 | 14 | P5 |
+
+LA 的布局:
+| D0 | D1 | D2 | D3 |
+|  0 |  1 |  2 | P0 |
+|  3 |  4 | P1 |  5 |
+|  6 | P2 |  7 |  8 |
+| P3 |  9 | 10 | 11 |
+| 12 | 13 | 14 | P5 |
+
+2.
+
+$ ./raid.py -L 0 -R 20 -C 8192
+ARG blockSize 4096
+ARG seed 0
+ARG numDisks 4
+ARG chunkSize 8192
+ARG numRequests 10
+ARG reqSize 4k
+ARG workload rand
+ARG writeFrac 0
+ARG randRange 20
+ARG level 0
+ARG raid5 LS
+ARG reverse False
+ARG timing False
+
+16 1
+LOGICAL READ from addr:16 size:4096
+  read  [disk 0, offset 4]
+
+8 1
+LOGICAL READ from addr:8 size:4096
+  read  [disk 0, offset 2]
+
+10 1
+LOGICAL READ from addr:10 size:4096
+  read  [disk 1, offset 2]
+
+15 1
+LOGICAL READ from addr:15 size:4096
+  read  [disk 3, offset 3]
+
+9 1
+LOGICAL READ from addr:9 size:4096
+  read  [disk 0, offset 3]
+
+18 1
+LOGICAL READ from addr:18 size:4096
+  read  [disk 1, offset 4]
+
+5 1
+LOGICAL READ from addr:5 size:4096
+  read  [disk 2, offset 1]
+
+12 1
+LOGICAL READ from addr:12 size:4096
+  read  [disk 2, offset 2]
+
+18 1
+LOGICAL READ from addr:18 size:4096
+  read  [disk 1, offset 4]
+
+16 1
+LOGICAL READ from addr:16 size:4096
+  read  [disk 0, offset 4]
+
+后面不算了, 开摆
+
+最方便的还是画出图之后查找, 公式法有点繁琐
+
+3.
+
+开摆
+
+4.
+
+$ ./raid.py -L 1 -R 20 -r -S 8192 -W s
+
+12KB 大小的请求对 RAID4/5 的效率最高
+
+5.
+
+$ ./raid.py -L 0 -n 100 -D 4 -R 20 -S 8192 -W rand -t -c
+...
+disk:0  busy:  90.40  I/Os:    52 (sequential:21 nearly:30 random:1)
+disk:1  busy: 100.00  I/Os:    51 (sequential:12 nearly:38 random:1)
+disk:2  busy:  89.90  I/Os:    48 (sequential:15 nearly:32 random:1)
+disk:3  busy:  90.91  I/Os:    49 (sequential:16 nearly:32 random:1)
+
+STAT totalTime 19.8
+
+$ ./raid.py -L 1 -n 100 -D 4 -R 20 -S 8192 -W rand -t -c
+...
+disk:0  busy:  87.12  I/Os:    52 (sequential:0 nearly:51 random:1)
+disk:1  busy:  86.44  I/Os:    48 (sequential:0 nearly:47 random:1)
+disk:2  busy: 100.00  I/Os:    51 (sequential:0 nearly:50 random:1)
+disk:3  busy:  87.80  I/Os:    49 (sequential:0 nearly:48 random:1)
+
+STAT totalTime 29.499999999999993
+
+$ ./raid.py -L 4 -n 100 -D 4 -R 20 -S 8192 -W rand -t -c
+...
+disk:0  busy:  95.70  I/Os:    69 (sequential:17 nearly:51 random:1)
+disk:1  busy: 100.00  I/Os:    68 (sequential:16 nearly:51 random:1)
+disk:2  busy:  94.53  I/Os:    63 (sequential:19 nearly:43 random:1)
+disk:3  busy:   0.00  I/Os:     0 (sequential:0 nearly:0 random:0)
+
+STAT totalTime 25.60000000000001
+
+$ ./raid.py -L 5 -n 100 -D 4 -R 20 -S 8192 -W rand -t -c
+...
+disk:0  busy:  90.18  I/Os:    52 (sequential:16 nearly:35 random:1)
+disk:1  busy: 100.00  I/Os:    51 (sequential:9 nearly:41 random:1)
+disk:2  busy:  93.75  I/Os:    48 (sequential:7 nearly:40 random:1)
+disk:3  busy:  91.52  I/Os:    49 (sequential:12 nearly:36 random:1)
+
+STAT totalTime 22.4
+
+6.
+
+$ ./raid.py -L 0 -n 100 -D 6 -R 20 -S 8192 -W rand -t -c
+...
+disk:0  busy:  99.32  I/Os:    38 (sequential:13 nearly:24 random:1)
+disk:1  busy: 100.00  I/Os:    36 (sequential:18 nearly:17 random:1)
+disk:2  busy:  90.41  I/Os:    30 (sequential:13 nearly:16 random:1)
+disk:3  busy:  86.30  I/Os:    31 (sequential:11 nearly:19 random:1)
+disk:4  busy:  92.47  I/Os:    32 (sequential:18 nearly:13 random:1)
+disk:5  busy:  93.84  I/Os:    33 (sequential:18 nearly:14 random:1)
+
+STAT totalTime 14.599999999999993
+
+$ ./raid.py -L 1 -n 100 -D 6 -R 20 -S 8192 -W rand -t -c
+...
+disk:0  busy:  98.95  I/Os:    38 (sequential:0 nearly:37 random:1)
+disk:1  busy:  79.06  I/Os:    31 (sequential:0 nearly:30 random:1)
+disk:2  busy: 100.00  I/Os:    36 (sequential:0 nearly:35 random:1)
+disk:3  busy:  88.48  I/Os:    32 (sequential:0 nearly:31 random:1)
+disk:4  busy:  85.34  I/Os:    30 (sequential:0 nearly:29 random:1)
+disk:5  busy:  90.58  I/Os:    33 (sequential:0 nearly:32 random:1)
+
+STAT totalTime 19.099999999999984
+
+$ ./raid.py -L 4 -n 100 -D 6 -R 20 -S 8192 -W rand -t -c
+...
+disk:0  busy: 100.00  I/Os:    38 (sequential:22 nearly:15 random:1)
+disk:1  busy:  99.37  I/Os:    40 (sequential:14 nearly:25 random:1)
+disk:2  busy:  96.84  I/Os:    44 (sequential:17 nearly:26 random:1)
+disk:3  busy:  87.34  I/Os:    40 (sequential:16 nearly:23 random:1)
+disk:4  busy:  94.94  I/Os:    38 (sequential:13 nearly:24 random:1)
+disk:5  busy:   0.00  I/Os:     0 (sequential:0 nearly:0 random:0)
+
+STAT totalTime 15.799999999999992
+
+$ ./raid.py -L 5 -n 100 -D 5 -R 20 -S 8192 -W rand -t -c
+...
+disk:0  busy:  99.32  I/Os:    38 (sequential:13 nearly:24 random:1)
+disk:1  busy:  100.00  I/Os:    36 (sequential:18 nearly:17 random:1)
+disk:2  busy:  94.52  I/Os:    30 (sequential:10 nearly:19 random:1)
+disk:3  busy:  97.95  I/Os:    31 (sequential:1 nearly:29 random:1)
+disk:4  busy: 100.00  I/Os:    32 (sequential:15 nearly:16 random:1)
+disk:5  busy:  93.84  I/Os:    33 (sequential:18 nearly:14 random:1)
+
+STAT totalTime 14.599999999999998
+
+7.
+
+$ ./raid.py -L 0 -n 100 -D 4 -R 20 -S 8192 -W rand -w 100 -t -c
+...
+disk:0  busy:  90.40  I/Os:    52 (sequential:21 nearly:30 random:1)
+disk:1  busy: 100.00  I/Os:    51 (sequential:12 nearly:38 random:1)
+disk:2  busy:  89.90  I/Os:    48 (sequential:15 nearly:32 random:1)
+disk:3  busy:  90.91  I/Os:    49 (sequential:16 nearly:32 random:1)
+
+STAT totalTime 19.8
+
+$ ./raid.py -L 1 -n 100 -D 4 -R 20 -S 8192 -W rand -w 100 -t -c
+...
+disk:0  busy:  98.34  I/Os:   100 (sequential:22 nearly:77 random:1)
+disk:1  busy:  98.34  I/Os:   100 (sequential:22 nearly:77 random:1)
+disk:2  busy: 100.00  I/Os:   100 (sequential:21 nearly:78 random:1)
+disk:3  busy: 100.00  I/Os:   100 (sequential:21 nearly:78 random:1)
+
+STAT totalTime 42.10000000000002
+
+$ ./raid.py -L 4 -n 100 -D 4 -R 20 -S 8192 -W rand -w 100 -t -c
+...
+disk:0  busy:  89.41  I/Os:   132 (sequential:23 nearly:108 random:1)
+disk:1  busy:  75.29  I/Os:    68 (sequential:16 nearly:51 random:1)
+disk:2  busy:  91.76  I/Os:   132 (sequential:30 nearly:101 random:1)
+disk:3  busy: 100.00  I/Os:   196 (sequential:57 nearly:138 random:1)
+
+STAT totalTime 34.000000000000064
+
+$ ./raid.py -L 5 -n 100 -D 4 -R 20 -S 8192 -W rand -w 100 -t -c
+...
+disk:0  busy:  88.05  I/Os:   112 (sequential:31 nearly:80 random:1)
+disk:1  busy:  94.34  I/Os:   120 (sequential:32 nearly:87 random:1)
+disk:2  busy: 100.00  I/Os:   152 (sequential:44 nearly:107 random:1)
+disk:3  busy:  93.08  I/Os:   144 (sequential:41 nearly:102 random:1)
+
+STAT totalTime 31.800000000000047
+
+8.
