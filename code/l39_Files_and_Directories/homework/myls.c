@@ -9,8 +9,24 @@
 
 int main(int argc, const char *argv[])
 {
-	int l_flag = strcmp(argv[1], "-l") == 0 ? 1 : 0;
-	const char *folder_name = argv[2];
+	int l_flag = 0;
+	char folder_name[256];
+
+	if (argc == 1) {
+		strcpy(folder_name, ".");
+	} else if (argc == 2) {
+		if (strcmp(argv[1], "-l") == 0) {
+			l_flag = 1;
+			strcpy(folder_name, ".");
+		} else {
+			strcpy(folder_name, argv[1]);
+		}
+	} else if (argc == 3) {
+	} else {
+		fprintf(stderr, "please enter right argument\n");
+		exit(1);
+	}
+
 	struct stat fileinfo;
 
 	int rc = stat(filename, &fileinfo);
