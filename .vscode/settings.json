@@ -114,6 +114,7 @@
     "nonlinearoptimization": "c",
     "numericaldiff": "c",
     "sparseextra": "c",
-    "specialfunctions": "c"
+    "specialfunctions": "c",
+    "sigevent_t.h": "c"
   }
 }
