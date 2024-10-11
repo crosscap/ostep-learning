@@ -7,7 +7,7 @@ ifeq ($(OS),Linux)
 	LIBS += -pthread
 endif
 
-SRCS   := mystat.c
+SRCS   := mystat.c myls.c
 
 OBJS   := ${SRCS:c=o}
 PROGS  := ${SRCS:.c=}
