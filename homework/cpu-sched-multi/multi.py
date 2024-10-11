@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 # each job has a working-set size
 # if it runs "in cache", it runs at rate X
@@ -14,6 +14,7 @@ from collections import *
 from optparse import OptionParser
 import random
 
+
 # to make Python2 and Python3 act the same -- how dumb
 def random_seed(seed):
     try:
@@ -22,15 +23,19 @@ def random_seed(seed):
         random.seed(seed)
     return
 
+
 # helper print function for columnar output
 def print_cpu(cpu, str):
     print((' ' * cpu * 35) + str)
     return
 
+
 #
 # Job struct: tracks everything about each job
 #
-Job = namedtuple('Job', ['name', 'run_time', 'working_set_size', 'affinity', 'time_left'])
+Job = namedtuple('Job', ['name', 'run_time',
+                 'working_set_size', 'affinity', 'time_left'])
+
 
 #
 # class cache
@@ -40,7 +45,7 @@ Job = namedtuple('Job', ['name', 'run_time', 'working_set_size', 'affinity', 'ti
 # - run for 'cache_warmup_time' on CPU
 # - after that amount of time on CPU, cache is "warm" for you
 # cache has limited size, so only so many jobs can be "warm" at a time
-# 
+#
 class cache:
     def __init__(self, cpu_id, jobs, cache_size, cache_rate_cold, cache_rate_warm, cache_warmup_time):
         self.cpu_id = cpu_id
@@ -52,7 +57,7 @@ class cache:
 
         # cache_contents
         # - should track whose working sets are in the cache
-        # - it's a list of job_names that 
+        # - it's a list of job_names that
         #   * is len>=1, and the SUM of working sets fits into the cache
         # OR
         #   * len=1 and whose working set may indeed be too big
@@ -101,7 +106,7 @@ class cache:
             return 'w'
         else:
             return ' '
-        
+
     def get_rate(self, job_name):
         if job_name in self.cache_contents:
             return self.cache_rate_warm
@@ -117,6 +122,7 @@ class cache:
                 self.adjust_size()
                 # print_cpu(self.cpu_id, '*warm cache*')
         return
+
 
 #
 # class scheduler
@@ -139,21 +145,25 @@ class scheduler:
                     job_list = '%s:%d:%d' % (str(j), run_time, working_set)
                 else:
                     job_list += (',%s:%d:%d' % (str(j), run_time, working_set))
-                
+
         # just the job names
         self.job_name_list = []
 
         # info about each job
         self.jobs = {}
-        
+
         for entry in job_list.split(','):
             tmp = entry.split(':')
             if len(tmp) != 3:
-                print('bad job description [%s]: needs triple of name:runtime:working_set_size' % entry)
+                print(
+                    'bad job description [%s]: needs triple of name:runtime:working_set_size' % entry)
                 exit(1)
-            job_name, run_time, working_set_size = tmp[0], int(tmp[1]), int(tmp[2])
-            self.jobs[job_name] = Job(name=job_name, run_time=run_time, working_set_size=working_set_size, affinity=[], time_left=[run_time])
-            print('Job name:%s run_time:%d working_set_size:%d' % (job_name, run_time, working_set_size))
+            job_name, run_time, working_set_size = tmp[0], int(
+                tmp[1]), int(tmp[2])
+            self.jobs[job_name] = Job(name=job_name, run_time=run_time,
+                                      working_set_size=working_set_size, affinity=[], time_left=[run_time])
+            print('Job name:%s run_time:%d working_set_size:%d' %
+                  (job_name, run_time, working_set_size))
             # self.sched_queue.append(job_name)
             if job_name in self.job_name_list:
                 print('repeated job name %s' % job_name)
@@ -173,12 +183,14 @@ class scheduler:
                     exit(1)
                 job_name = tmp[0]
                 if job_name not in self.job_name_list:
-                    print('job name %s in affinity list does not exist' % job_name)
+                    print('job name %s in affinity list does not exist' %
+                          job_name)
                     exit(1)
                 for cpu in tmp[1].split('.'):
                     self.jobs[job_name].affinity.append(int(cpu))
                     if int(cpu) < 0 or int(cpu) >= num_cpus:
-                        print('bad cpu %d specified in affinity %s' % (int(cpu), affinity))
+                        print('bad cpu %d specified in affinity %s' %
+                              (int(cpu), affinity))
                         exit(1)
 
         # now, assign jobs to either ALL the one queue, or to each of the queues in RR style
@@ -190,7 +202,7 @@ class scheduler:
         if self.per_cpu_queues:
             for cpu in range(num_cpus):
                 self.per_cpu_sched_queue[cpu] = []
-            # now assign jobs to these queues 
+            # now assign jobs to these queues
             jobs_not_assigned = list(self.job_name_list)
             while len(jobs_not_assigned) > 0:
                 for cpu in range(num_cpus):
@@ -204,9 +216,10 @@ class scheduler:
                             break
 
             for cpu in range(num_cpus):
-                print('Scheduler CPU %d queue: %s' % (cpu, self.per_cpu_sched_queue[cpu]))
+                print('Scheduler CPU %d queue: %s' %
+                      (cpu, self.per_cpu_sched_queue[cpu]))
             print('')
-                            
+
         else:
             # assign them all to same single queue
             self.single_sched_queue = []
@@ -218,7 +231,6 @@ class scheduler:
             print('Scheduler central queue: %s\n' % (self.single_sched_queue))
 
         self.num_jobs = len(self.job_name_list)
-
 
         self.peek_interval = peek_interval
 
@@ -257,7 +269,8 @@ class scheduler:
         # scheduler (because it runs the simulation) also instantiates and updates each cache
         self.caches = {}
         for cpu in range(self.num_cpus):
-            self.caches[cpu] = cache(cpu, self.jobs, cache_size, cache_rate_cold, cache_rate_warm, cache_warmup_time)
+            self.caches[cpu] = cache(
+                cpu, self.jobs, cache_size, cache_rate_cold, cache_rate_warm, cache_warmup_time)
 
         return
 
@@ -279,7 +292,8 @@ class scheduler:
             if self.trace_time_left:
                 num_to_print += 6 * self.num_cpus
             if self.trace_cache:
-                num_to_print += 8 * self.num_cpus + self.num_jobs * (self.num_cpus)
+                num_to_print += 8 * self.num_cpus + \
+                    self.num_jobs * (self.num_cpus)
             if self.trace:
                 print('-' * num_to_print)
         else:
@@ -335,7 +349,7 @@ class scheduler:
                 print('%s ' % job_name, end='')
             print('    ', end='')
         return
-        
+
     def steal_jobs(self):
         if not self.per_cpu_queues or self.peek_interval <= 0:
             return
@@ -354,10 +368,11 @@ class scheduler:
                     for job_name in self.per_cpu_sched_queue[other_cpu]:
                         # print('---> examine job %s' % job_name)
                         if len(self.jobs[job_name].affinity) == 0 or cpu in self.jobs[job_name]:
-                           self.per_cpu_sched_queue[other_cpu].remove(job_name)
-                           self.per_cpu_sched_queue[cpu].append(job_name)
-                           # print('stole job %s from %d to %d' % (job_name, other_cpu, cpu))
-                           break
+                            self.per_cpu_sched_queue[other_cpu].remove(
+                                job_name)
+                            self.per_cpu_sched_queue[cpu].append(job_name)
+                            # print('stole job %s from %d to %d' % (job_name, other_cpu, cpu))
+                            break
         return
 
     def run_one_tick(self, cpu):
@@ -405,7 +420,8 @@ class scheduler:
             cache_string = ''
             for job_name in self.job_name_list:
                 # cache_string += '%s%s ' % (job_name, self.caches[cpu].get_cache_state(job_name))
-                cache_string += '%s' % self.caches[cpu].get_cache_state(job_name)
+                cache_string += '%s' % self.caches[cpu].get_cache_state(
+                    job_name)
             if self.trace:
                 if self.trace_cache:
                     print('cache[%s]' % cache_string, end='')
@@ -426,7 +442,7 @@ class scheduler:
 
             # if it's time, do some job stealing
             self.steal_jobs()
-                
+
             # assign_jobsign news jobs to CPUs (this can happen every tick?)
             self.assign_jobs()
 
@@ -439,7 +455,7 @@ class scheduler:
             if self.trace:
                 print('')
 
-            # the clock keeps ticking            
+            # the clock keeps ticking
             self.system_time += 1
 
         if self.solve:
@@ -451,29 +467,48 @@ class scheduler:
             print('')
         return
 
+
 #
 # MAIN PROGRAM
 #
 parser = OptionParser()
-parser.add_option('-s', '--seed',        default=0,     help='the random seed',                        action='store', type='int', dest='seed')
-parser.add_option('-j', '--job_num',     default=3,     help='number of jobs in the system',           action='store', type='int', dest='job_num')
-parser.add_option('-R', '--max_run',     default=100,   help='max run time of random-gen jobs',        action='store', type='int', dest='max_run')
-parser.add_option('-W', '--max_wset',    default=200,   help='max working set of random-gen jobs',     action='store', type='int', dest='max_wset')
+parser.add_option('-s', '--seed',        default=0,     help='the random seed',
+                  action='store', type='int', dest='seed')
+parser.add_option('-j', '--job_num',     default=3,     help='number of jobs in the system',
+                  action='store', type='int', dest='job_num')
+parser.add_option('-R', '--max_run',     default=100,   help='max run time of random-gen jobs',
+                  action='store', type='int', dest='max_run')
+parser.add_option('-W', '--max_wset',    default=200,
+                  help='max working set of random-gen jobs',     action='store', type='int', dest='max_wset')
 parser.add_option('-L', '--job_list',    default='',    help='provide a comma-separated list of job_name:run_time:working_set_size (e.g., a:10:100,b:10:50 means 2 jobs with run-times of 10, the first (a) with working set size=100, second (b) with working set size=50)', action='store', type='string', dest='job_list')
-parser.add_option('-p', '--per_cpu_queues', default=False, help='per-CPU scheduling queues (not one)', action='store_true',        dest='per_cpu_queues')
-parser.add_option('-A', '--affinity',    default='',    help='a list of jobs and which CPUs they can run on (e.g., a:0.1.2,b:0.1 allows job a to run on CPUs 0,1,2 but b only on CPUs 0 and 1', action='store', type='string', dest='affinity')
-parser.add_option('-n', '--num_cpus',    default=2,     help='number of CPUs',                         action='store', type='int', dest='num_cpus')
-parser.add_option('-q', '--quantum',     default=10,    help='length of time slice',                   action='store', type='int', dest='time_slice')
-parser.add_option('-P', '--peek_interval', default=30,  help='for per-cpu scheduling, how often to peek at other schedule queue; 0 turns this off', action='store', type='int', dest='peek_interval')
-parser.add_option('-w', '--warmup_time', default=10,    help='time it takes to warm cache',            action='store', type='int', dest='warmup_time')
-parser.add_option('-r', '--warm_rate', default=2,     help='how much faster to run with warm cache', action='store', type='int', dest='warm_rate')
-parser.add_option('-M', '--cache_size',  default=100,   help='cache size',                             action='store', type='int', dest='cache_size')
-parser.add_option('-o', '--rand_order',  default=False, help='has CPUs get jobs in random order',      action='store_true',        dest='random_order')
-parser.add_option('-t', '--trace',       default=False, help='enable basic tracing (show which jobs got scheduled)',      action='store_true',        dest='trace')
-parser.add_option('-T', '--trace_time_left', default=False, help='trace time left for each job',       action='store_true',        dest='trace_time_left')
-parser.add_option('-C', '--trace_cache', default=False, help='trace cache status (warm/cold) too',     action='store_true',        dest='trace_cache')
-parser.add_option('-S', '--trace_sched', default=False, help='trace scheduler state',                  action='store_true',        dest='trace_sched')
-parser.add_option('-c', '--compute',     default=False, help='compute answers for me',                 action='store_true',        dest='solve')
+parser.add_option('-p', '--per_cpu_queues', default=False,
+                  help='per-CPU scheduling queues (not one)', action='store_true',        dest='per_cpu_queues')
+parser.add_option('-A', '--affinity',    default='',
+                  help='a list of jobs and which CPUs they can run on (e.g., a:0.1.2,b:0.1 allows job a to run on CPUs 0,1,2 but b only on CPUs 0 and 1', action='store', type='string', dest='affinity')
+parser.add_option('-n', '--num_cpus',    default=2,     help='number of CPUs',
+                  action='store', type='int', dest='num_cpus')
+parser.add_option('-q', '--quantum',     default=10,    help='length of time slice',
+                  action='store', type='int', dest='time_slice')
+parser.add_option('-P', '--peek_interval', default=30,  help='for per-cpu scheduling, how often to peek at other schedule queue; 0 turns this off',
+                  action='store', type='int', dest='peek_interval')
+parser.add_option('-w', '--warmup_time', default=10,    help='time it takes to warm cache',
+                  action='store', type='int', dest='warmup_time')
+parser.add_option('-r', '--warm_rate', default=2,
+                  help='how much faster to run with warm cache', action='store', type='int', dest='warm_rate')
+parser.add_option('-M', '--cache_size',  default=100,   help='cache size',
+                  action='store', type='int', dest='cache_size')
+parser.add_option('-o', '--rand_order',  default=False, help='has CPUs get jobs in random order',
+                  action='store_true',        dest='random_order')
+parser.add_option('-t', '--trace',       default=False,
+                  help='enable basic tracing (show which jobs got scheduled)',      action='store_true',        dest='trace')
+parser.add_option('-T', '--trace_time_left', default=False, help='trace time left for each job',
+                  action='store_true',        dest='trace_time_left')
+parser.add_option('-C', '--trace_cache', default=False, help='trace cache status (warm/cold) too',
+                  action='store_true',        dest='trace_cache')
+parser.add_option('-S', '--trace_sched', default=False, help='trace scheduler state',
+                  action='store_true',        dest='trace_sched')
+parser.add_option('-c', '--compute',     default=False, help='compute answers for me',
+                  action='store_true',        dest='solve')
 
 (options, args) = parser.parse_args()
 
@@ -501,7 +536,7 @@ print('')
 
 #
 # JOBS
-# 
+#
 job_list = options.job_list
 job_num = int(options.job_num)
 max_run = int(options.max_run)
@@ -537,4 +572,3 @@ S = scheduler(job_list=job_list, affinity=options.affinity, per_cpu_queues=optio
 
 # Finally, ...
 S.run()
-
