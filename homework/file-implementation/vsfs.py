@@ -1,8 +1,9 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 from __future__ import print_function
 import random
 from optparse import OptionParser
+
 
 # to make Python2 and Python3 act the same -- how dumb
 def random_seed(seed):
@@ -12,15 +13,19 @@ def random_seed(seed):
         random.seed(seed)
     return
 
+
 DEBUG = False
+
 
 def dprint(str):
     if DEBUG:
         print(str)
 
-printOps      = True
-printState    = True
-printFinal    = True
+
+printOps = True
+printState = True
+printFinal = True
+
 
 class bitmap:
     def __init__(self, size):
@@ -39,12 +44,12 @@ class bitmap:
         return -1
 
     def free(self, num):
-        assert(self.bmap[num] == 1)
+        assert (self.bmap[num] == 1)
         self.numAllocated -= 1
         self.bmap[num] = 0
 
     def markAllocated(self, num):
-        assert(self.bmap[num] == 0)
+        assert (self.bmap[num] == 0)
         self.numAllocated += 1
         self.bmap[num] = 1
 
@@ -57,15 +62,16 @@ class bitmap:
             s += str(self.bmap[i])
         return s
 
+
 class block:
     def __init__(self, ftype):
-        assert(ftype == 'd' or ftype == 'f' or ftype == 'free')
+        assert (ftype == 'd' or ftype == 'f' or ftype == 'free')
         self.ftype = ftype
         # only for directories, properly a subclass but who cares
         self.dirUsed = 0
         self.maxUsed = 32
         self.dirList = []
-        self.data    = ''
+        self.data = ''
 
     def dump(self):
         if self.ftype == 'free':
@@ -85,34 +91,34 @@ class block:
             return '[%s]' % self.data
 
     def setType(self, ftype):
-        assert(self.ftype == 'free')
+        assert (self.ftype == 'free')
         self.ftype = ftype
 
     def addData(self, data):
-        assert(self.ftype == 'f')
+        assert (self.ftype == 'f')
         self.data = data
 
     def getNumEntries(self):
-        assert(self.ftype == 'd')
+        assert (self.ftype == 'd')
         return self.dirUsed
 
     def getFreeEntries(self):
-        assert(self.ftype == 'd')
+        assert (self.ftype == 'd')
         return self.maxUsed - self.dirUsed
 
     def getEntry(self, num):
-        assert(self.ftype == 'd')
-        assert(num < self.dirUsed)
+        assert (self.ftype == 'd')
+        assert (num < self.dirUsed)
         return self.dirList[num]
 
     def addDirEntry(self, name, inum):
-        assert(self.ftype == 'd')
+        assert (self.ftype == 'd')
         self.dirList.append((name, inum))
         self.dirUsed += 1
-        assert(self.dirUsed <= self.maxUsed)
+        assert (self.dirUsed <= self.maxUsed)
 
     def delDirEntry(self, name):
-        assert(self.ftype == 'd')
+        assert (self.ftype == 'd')
         tname = name.split('/')
         dname = tname[len(tname) - 1]
         for i in range(len(self.dirList)):
@@ -120,32 +126,33 @@ class block:
                 self.dirList.pop(i)
                 self.dirUsed -= 1
                 return
-        assert(1 == 0)
+        assert (1 == 0)
 
     def dirEntryExists(self, name):
-        assert(self.ftype == 'd')
+        assert (self.ftype == 'd')
         for d in self.dirList:
             if name == d[0]:
                 return True
         return False
 
     def free(self):
-        assert(self.ftype != 'free')
+        assert (self.ftype != 'free')
         if self.ftype == 'd':
             # check for only dot, dotdot here
-            assert(self.dirUsed == 2)
+            assert (self.dirUsed == 2)
             self.dirUsed = 0
-        self.data  = ''
+        self.data = ''
         self.ftype = 'free'
+
 
 class inode:
     def __init__(self, ftype='free', addr=-1, refCnt=1):
         self.setAll(ftype, addr, refCnt)
 
     def setAll(self, ftype, addr, refCnt):
-        assert(ftype == 'd' or ftype == 'f' or ftype == 'free')
-        self.ftype  = ftype
-        self.addr   = addr
+        assert (ftype == 'd' or ftype == 'f' or ftype == 'free')
+        self.ftype = ftype
+        self.addr = addr
         self.refCnt = refCnt
 
     def incRefCnt(self):
@@ -158,7 +165,7 @@ class inode:
         return self.refCnt
 
     def setType(self, ftype):
-        assert(ftype == 'd' or ftype == 'f' or ftype == 'free')
+        assert (ftype == 'd' or ftype == 'f' or ftype == 'free')
         self.ftype = ftype
 
     def setAddr(self, block):
@@ -178,24 +185,24 @@ class inode:
 
     def free(self):
         self.ftype = 'free'
-        self.addr  = -1
-        
+        self.addr = -1
+
 
 class fs:
     def __init__(self, numInodes, numData):
         self.numInodes = numInodes
-        self.numData   = numData
-        
+        self.numData = numData
+
         self.ibitmap = bitmap(self.numInodes)
-        self.inodes  = []
+        self.inodes = []
         for i in range(self.numInodes):
             self.inodes.append(inode())
 
         self.dbitmap = bitmap(self.numData)
-        self.data    = []
+        self.data = []
         for i in range(self.numData):
             self.data.append(block('free'))
-    
+
         # root inode
         self.ROOT = 0
 
@@ -208,19 +215,20 @@ class fs:
         self.data[0].addDirEntry('..', self.ROOT)
 
         # these is just for the fake workload generator
-        self.files      = []
-        self.dirs       = ['/']
-        self.nameToInum = {'/':self.ROOT}
+        self.files = []
+        self.dirs = ['/']
+        self.nameToInum = {'/': self.ROOT}
 
     def dump(self):
         print('inode bitmap ', self.ibitmap.dump())
         print('inodes       ', end='')
-        for i in range(0,self.numInodes):
+        for i in range(0, self.numInodes):
             ftype = self.inodes[i].getType()
             if ftype == 'free':
                 print('[]', end='')
             else:
-                print('[%s a:%s r:%d]' % (ftype, self.inodes[i].getAddr(), self.inodes[i].getRefCnt()), end='')
+                print('[%s a:%s r:%d]' % (
+                    ftype, self.inodes[i].getAddr(), self.inodes[i].getRefCnt()), end='')
         print('')
         print('data bitmap  ', self.dbitmap.dump())
         print('data         ', end='')
@@ -229,13 +237,16 @@ class fs:
         print('')
 
     def makeName(self):
-        p = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+        p = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k', 'm', 'n',
+             'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
         return p[int(random.random() * len(p))]
-        p = ['b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'p', 's', 't', 'v', 'w', 'x', 'y', 'z']
+        p = ['b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l',
+             'm', 'n', 'p', 's', 't', 'v', 'w', 'x', 'y', 'z']
         f = p[int(random.random() * len(p))]
         p = ['a', 'e', 'i', 'o', 'u']
         s = p[int(random.random() * len(p))]
-        p = ['b', 'c', 'd', 'f', 'g', 'j', 'k', 'l', 'm', 'n', 'p', 's', 't', 'v', 'w', 'x', 'y', 'z']
+        p = ['b', 'c', 'd', 'f', 'g', 'j', 'k', 'l', 'm',
+             'n', 'p', 's', 't', 'v', 'w', 'x', 'y', 'z']
         l = p[int(random.random() * len(p))]
         return '%c%c%c' % (f, s, l)
 
@@ -252,7 +263,7 @@ class fs:
     def dataFree(self, bnum):
         self.dbitmap.free(bnum)
         self.data[bnum].free()
-        
+
     def getParent(self, name):
         tmp = name.split('/')
         if len(tmp) == 2:
@@ -339,13 +350,13 @@ class fs:
         if self.data[block].dirEntryExists(newfile):
             dprint('*** createFile failed: not a unique name ***')
             return -1
-        
+
         # find free inode
         inum = self.inodeAlloc()
         if inum == -1:
             dprint('*** createFile failed: no inodes left ***')
             return -1
-        
+
         # if a directory, have to allocate directory block for basic (., ..) info
         fblock = -1
         if ftype == 'd':
@@ -361,7 +372,7 @@ class fs:
                 self.data[fblock].addDirEntry('..', parentInum)
         else:
             refCnt = 1
-            
+
         # now ok to init inode properly
         self.inodes[inum].setAll(ftype, fblock, refCnt)
 
@@ -376,7 +387,8 @@ class fs:
     def writeFile(self, tfile, data):
         inum = self.nameToInum[tfile]
         curSize = self.inodes[inum].getSize()
-        dprint('writeFile: inum:%d cursize:%d refcnt:%d' % (inum, curSize, self.inodes[inum].getRefCnt()))
+        dprint('writeFile: inum:%d cursize:%d refcnt:%d' %
+               (inum, curSize, self.inodes[inum].getRefCnt()))
         if curSize == 1:
             dprint('*** writeFile failed: file is full ***')
             return -1
@@ -389,9 +401,10 @@ class fs:
             self.data[fblock].addData(data)
         self.inodes[inum].setAddr(fblock)
         if printOps:
-            print('fd=open("%s", O_WRONLY|O_APPEND); write(fd, buf, BLOCKSIZE); close(fd);' % tfile)
+            print(
+                'fd=open("%s", O_WRONLY|O_APPEND); write(fd, buf, BLOCKSIZE); close(fd);' % tfile)
         return 0
-            
+
     def doDelete(self):
         dprint('doDelete')
         if len(self.files) == 0:
@@ -426,7 +439,7 @@ class fs:
                 print('link("%s", "%s");' % (target, fullName))
             return 0
         return -1
-    
+
     def doCreate(self, ftype):
         dprint('doCreate')
         parent = self.dirs[int(random.random() * len(self.dirs))]
@@ -468,16 +481,16 @@ class fs:
         return rc
 
     def run(self, numRequests):
-        self.percentMkdir  = 0.40
-        self.percentWrite  = 0.40
+        self.percentMkdir = 0.40
+        self.percentWrite = 0.40
         self.percentDelete = 0.20
-        self.numRequests   = 20
+        self.numRequests = 20
 
         print('Initial state')
         print('')
         self.dump()
         print('')
-        
+
         for i in range(numRequests):
             if printOps == False:
                 print('Which operation took place?')
@@ -501,10 +514,12 @@ class fs:
                         rc = self.doCreate('d')
                         dprint('doCreate(d) rc:%d' % rc)
                 if self.ibitmap.numFree() == 0:
-                    print('File system out of inodes; rerun with more via command-line flag?')
+                    print(
+                        'File system out of inodes; rerun with more via command-line flag?')
                     exit(1)
                 if self.dbitmap.numFree() == 0:
-                    print('File system out of data blocks; rerun with more via command-line flag?')
+                    print(
+                        'File system out of data blocks; rerun with more via command-line flag?')
                     exit(1)
             if printState == True:
                 print('')
@@ -512,7 +527,8 @@ class fs:
                 print('')
             else:
                 print('')
-                print('  State of file system (inode bitmap, inodes, data bitmap, data)?')
+                print(
+                    '  State of file system (inode bitmap, inodes, data bitmap, data)?')
                 print('')
 
         if printFinal:
@@ -523,18 +539,26 @@ class fs:
             print('  Directories:', self.dirs)
             print('')
 
+
 #
 # main program
 #
 parser = OptionParser()
 
-parser.add_option('-s', '--seed',        default=0,     help='the random seed',                      action='store', type='int', dest='seed')
-parser.add_option('-i', '--numInodes',   default=8,     help='number of inodes in file system',      action='store', type='int', dest='numInodes') 
-parser.add_option('-d', '--numData',     default=8,     help='number of data blocks in file system', action='store', type='int', dest='numData') 
-parser.add_option('-n', '--numRequests', default=10,    help='number of requests to simulate',       action='store', type='int', dest='numRequests')
-parser.add_option('-r', '--reverse',     default=False, help='instead of printing state, print ops', action='store_true',        dest='reverse')
-parser.add_option('-p', '--printFinal',  default=False, help='print the final set of files/dirs',    action='store_true',        dest='printFinal')
-parser.add_option('-c', '--compute',     default=False, help='compute answers for me',               action='store_true',        dest='solve')
+parser.add_option('-s', '--seed',        default=0,     help='the random seed',
+                  action='store', type='int', dest='seed')
+parser.add_option('-i', '--numInodes',   default=8,     help='number of inodes in file system',
+                  action='store', type='int', dest='numInodes')
+parser.add_option('-d', '--numData',     default=8,
+                  help='number of data blocks in file system', action='store', type='int', dest='numData')
+parser.add_option('-n', '--numRequests', default=10,    help='number of requests to simulate',
+                  action='store', type='int', dest='numRequests')
+parser.add_option('-r', '--reverse',     default=False,
+                  help='instead of printing state, print ops', action='store_true',        dest='reverse')
+parser.add_option('-p', '--printFinal',  default=False,
+                  help='print the final set of files/dirs',    action='store_true',        dest='printFinal')
+parser.add_option('-c', '--compute',     default=False, help='compute answers for me',
+                  action='store_true',        dest='solve')
 
 (options, args) = parser.parse_args()
 
@@ -550,13 +574,13 @@ random_seed(options.seed)
 
 if options.reverse:
     printState = False
-    printOps   = True
+    printOps = True
 else:
     printState = True
-    printOps   = False
+    printOps = False
 
 if options.solve:
-    printOps   = True
+    printOps = True
     printState = True
 
 printFinal = options.printFinal
@@ -573,5 +597,3 @@ f = fs(options.numInodes, options.numData)
 #
 
 f.run(options.numRequests)
-
-
