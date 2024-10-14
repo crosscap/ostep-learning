@@ -1,10 +1,11 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 from __future__ import print_function
 import math
 import sys
 from optparse import OptionParser
 import random
+
 
 class file_system:
     def __init__(self, num_groups, blocks_per_group, inodes_per_group,
@@ -42,12 +43,12 @@ class file_system:
 
         self.init_symbols()
 
-        self.total_data_free   = blocks_per_group * num_groups
+        self.total_data_free = blocks_per_group * num_groups
         self.total_inodes_free = inodes_per_group * num_groups
 
         # make root directory
         self.inode_bitmap[0][0] = 0
-        self.data_bitmap[0][0] = 0 # use one data block for ALL DIRS
+        self.data_bitmap[0][0] = 0  # use one data block for ALL DIRS
         self.allocate_symbol(0, '/')
 
         self.total_data_free -= 1
@@ -143,7 +144,7 @@ class file_system:
             if sum_free > free_inodes_max:
                 free_inodes_max = sum_free
                 target_group = g
-        assert(target_group != -1)
+        assert (target_group != -1)
         return target_group
 
     def find_free_inodes_near(self, target_group):
@@ -161,7 +162,7 @@ class file_system:
         return 1
 
     def pick_group(self, parent, filename, type):
-        if type == 'regular' and self.spread_inodes == False: 
+        if type == 'regular' and self.spread_inodes == False:
             # FFS policy: pick based on parent
             parent_inode_number = self.name_to_inode(parent)
             target_group = int(parent_inode_number / self.inodes_per_group)
@@ -170,7 +171,7 @@ class file_system:
             if num_free_inodes == 0:
                 target_group = self.find_free_inodes_near(target_group)
             return target_group
-        elif type == 'directory' or self.spread_inodes == True: 
+        elif type == 'directory' or self.spread_inodes == True:
             # find group with most free inodes
             return self.find_most_free_inodes_multiple(0, self.allocate_faraway)
         else:
@@ -192,15 +193,15 @@ class file_system:
             if self.data_bitmap[group][i] != self.BITMAP_FREE:
                 return False
         return True
-        
+
         if self.data_bitmap[group][index] == self.BITMAP_FREE:
             return True
         return False
-    
+
     # group is just the group where the inode is
     # size is how many are needed total
     def allocate_blocks(self, target_group, size, inode_number):
-        assert(size <= self.total_data_free)
+        assert (size <= self.total_data_free)
         allocated = []
         index = 0
         allocated_in_group = 0
@@ -209,7 +210,8 @@ class file_system:
         while True:
             if self.range_free(current_group, index, size-len(allocated), chunks_free):
                 # print('  local alloc', current_group, index)
-                assert(self.data_bitmap[current_group][index] == self.BITMAP_FREE)
+                assert (self.data_bitmap[current_group]
+                        [index] == self.BITMAP_FREE)
                 self.data_bitmap[current_group][index] = inode_number
                 allocated_in_group += 1
                 allocated.append((current_group, index))
@@ -223,14 +225,14 @@ class file_system:
             # i.e., when you've searched this entire group or
             #       when you've exhausted the large file exception
             if index == self.blocks_per_group or \
-               (self.large_file_exception > 0 and \
-                allocated_in_group == self.large_file_exception):
+               (self.large_file_exception > 0 and
+                    allocated_in_group == self.large_file_exception):
                 allocated_in_group = 0
                 index = 0
                 current_group = (current_group + 1) % self.num_groups
                 if current_group == target_group:
                     chunks_free = 1
-        
+
         return allocated
 
     def find_free_inode(self, group):
@@ -257,7 +259,7 @@ class file_system:
 
     def mark_inode_used(self, group, inode_index):
         self.inode_bitmap[group][inode_index] = inode_index + \
-                                                (group * self.inodes_per_group)
+            (group * self.inodes_per_group)
         return
 
     def do_delete(self, path):
@@ -296,14 +298,14 @@ class file_system:
         self.inode_bitmap[inode_group][inode_index] = self.BITMAP_FREE
         self.free_symbol(inode_number)
 
-        del self.name_to_inode_map[path] 
+        del self.name_to_inode_map[path]
 
         self.total_inodes_free += 1
         self.total_data_free += len(self.inode_blocks[inode_number])
 
         self.inode_type[inode_number] = ''
         self.inode_blocks[inode_number] = []
-        
+
         return 0
 
     def do_create(self, path, size, type):
@@ -316,7 +318,7 @@ class file_system:
         if self.total_data_free < size:
             self.vprint('[out of disk space]')
             return -1
-        
+
         # check if foo already exists
         parent_inode_number = self.name_to_inode(parent)
         if parent_inode_number == -1:
@@ -324,7 +326,8 @@ class file_system:
             return -1
         for (name, __inode_number) in self.dir_data[parent_inode_number]:
             if name == filename:
-                self.vprint('[file %s already exists in dir %s]' % (filename, parent))
+                self.vprint('[file %s already exists in dir %s]' %
+                            (filename, parent))
                 return -1
 
         # allocate new inode: which group?
@@ -334,7 +337,7 @@ class file_system:
         # thanks to pick_group()...
         inode_index = self.find_free_inode(group)
 
-        # calc global inode number 
+        # calc global inode number
         inode_number = inode_index + (group * self.inodes_per_group)
 
         # file allocation policy: could fail
@@ -342,7 +345,8 @@ class file_system:
         if self.spread_data_blocks:
             dest_block_group = self.find_min_data_usage()
             print('target alloc', dest_block_group)
-            allocated = self.allocate_blocks(dest_block_group, size, inode_number)
+            allocated = self.allocate_blocks(
+                dest_block_group, size, inode_number)
         else:
             allocated = self.allocate_blocks(group, size, inode_number)
         if len(allocated) == 0:
@@ -358,7 +362,8 @@ class file_system:
         self.inode_blocks[inode_number] = []
 
         for (selected_group, index) in allocated:
-            global_block_number = index + (selected_group * self.blocks_per_group)
+            global_block_number = index + \
+                (selected_group * self.blocks_per_group)
             # print 'global allocated', global_block_number
             self.inode_blocks[inode_number].append(global_block_number)
 
@@ -373,21 +378,22 @@ class file_system:
         # global accounting
         self.total_inodes_free -= 1
         self.total_data_free -= size
-        
+
         return 0
 
     def init_symbols(self):
         self.symbol_map = {}
         self.used_symbols = []
-        self.available_symbols = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','O','P','Q','R','S','T','U','V','W','X','Y','Z','0','1','2','3','4','5','6','7','8','9','!','@','#','%','^','&','*','(',')','[',']','{','}','/','.','<','>','|']
+        self.available_symbols = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
+                                  'L', 'M', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '!', '@', '#', '%', '^', '&', '*', '(', ')', '[', ']', '{', '}', '/', '.', '<', '>', '|']
         return
 
     def allocate_symbol(self, inode_number, suggested_name):
         if suggested_name not in self.used_symbols \
-               and suggested_name in self.available_symbols:
+                and suggested_name in self.available_symbols:
             choice = suggested_name
         else:
-            assert(len(self.available_symbols) > 0)
+            assert (len(self.available_symbols) > 0)
             choice = self.available_symbols[0]
         # print 'sym', suggested_name, '->', choice
         self.used_symbols.append(choice)
@@ -423,8 +429,10 @@ class file_system:
             for i in range(self.inodes_per_group):
                 if self.inode_bitmap[g][i] != self.BITMAP_FREE:
                     inodes_used += 1
-        assert(data_used + self.total_data_free == (self.num_groups * self.blocks_per_group))
-        assert(inodes_used + self.total_inodes_free == (self.num_groups * self.inodes_per_group))
+        assert (data_used + self.total_data_free ==
+                (self.num_groups * self.blocks_per_group))
+        assert (inodes_used + self.total_inodes_free ==
+                (self.num_groups * self.inodes_per_group))
 
         for f in self.name_to_inode_map:
             inode_number = self.name_to_inode_map[f]
@@ -432,7 +440,8 @@ class file_system:
             for b in blocks:
                 data_group = int(b / self.blocks_per_group)
                 data_index = b % self.blocks_per_group
-                assert(self.data_bitmap[data_group][data_index] == inode_number)
+                assert (self.data_bitmap[data_group]
+                        [data_index] == inode_number)
         return
 
     def create(self, path, size):
@@ -453,7 +462,6 @@ class file_system:
         self.print_success_or_fail(rc)
         return
 
-
     def read_input(self, filename):
         fd = open(filename)
         for line in fd:
@@ -465,19 +473,19 @@ class file_system:
             if len(tmp) == 0:
                 continue
             if tmp[0] == 'file':
-                assert(len(tmp) == 3)
+                assert (len(tmp) == 3)
                 name, size = tmp[1], int(tmp[2])
                 self.create(name, size)
             elif tmp[0] == 'dir':
-                assert(len(tmp) == 2)
+                assert (len(tmp) == 2)
                 name = tmp[1]
                 self.mkdir(name)
             elif tmp[0] == 'delete':
-                assert(len(tmp) == 2)
+                assert (len(tmp) == 2)
                 name = tmp[1]
                 self.delete(name)
             elif tmp[0] == 'dump':
-                assert(len(tmp) == 1)
+                assert (len(tmp) == 1)
                 self.dump()
             else:
                 print('command not recognized', tmp[0])
@@ -519,8 +527,10 @@ class file_system:
         print('inodes_per_group:', self.inodes_per_group)
         print('blocks_per_group:', self.blocks_per_group)
         print('')
-        print('free data blocks: %d (of %d)' % (self.total_data_free, (self.num_groups * self.blocks_per_group)))
-        print('free inodes:      %d (of %d)' % (self.total_inodes_free, (self.num_groups * self.inodes_per_group)))
+        print('free data blocks: %d (of %d)' %
+              (self.total_data_free, (self.num_groups * self.blocks_per_group)))
+        print('free inodes:      %d (of %d)' %
+              (self.total_inodes_free, (self.num_groups * self.inodes_per_group)))
         print('')
         print('spread inodes?   ', self.spread_inodes)
         print('spread data?     ', self.spread_data_blocks)
@@ -534,9 +544,9 @@ class file_system:
             max_power = inode_power
         else:
             max_power = data_power
-        
+
         while max_power >= 0:
-            print('     ', end='') # spacing before inode print out
+            print('     ', end='')  # spacing before inode print out
             if inode_power >= max_power:
                 self.do_numeric_header(max_power, self.inodes_per_group)
             else:
@@ -565,7 +575,8 @@ class file_system:
             # print '        data %s' % (self.list_to_string(self.data_bitmap[i]))
             if self.compute:
                 print('  %3d %s %s' % (i,
-                                       self.list_to_string(self.inode_bitmap[i]),
+                                       self.list_to_string(
+                                           self.inode_bitmap[i]),
                                        self.list_to_string(self.data_bitmap[i])), end='')
                 if self.show_block_addresses:
                     print('  [%4d-%4d]' % (count, count + self.group_size - 1))
@@ -575,27 +586,27 @@ class file_system:
                 print('  %3d %s %s' % (i,
                                        '?' * self.inodes_per_group,
                                        '?' * self.blocks_per_group))
-                
+
             count += self.group_size
 
         if self.do_per_file_stats:
             self.show_symbol_map = True
-            
+
         if self.show_symbol_map == False:
             print('')
             return
-        
+
         print('\nsymbol  inode#  filename     filetype ', end='')
         if self.do_per_file_stats:
             print('  block_addresses')
         else:
             print('')
         # sorted(student_tuples, key=lambda student: student[2])
-        
+
         for name in sorted(self.name_to_inode_map):
             inode_number = self.name_to_inode_map[name]
             file_type = self.inode_type[inode_number]
-            print('%-6s  %6d  %-11s  %-10s ' % \
+            print('%-6s  %6d  %-11s  %-10s ' %
                   (self.get_symbol(inode_number), inode_number, name, file_type), end='')
             if self.do_per_file_stats:
                 for i in self.inode_blocks[inode_number]:
@@ -628,29 +639,33 @@ class file_system:
         for d in data_blocks:
             data_group = int(d / self.blocks_per_group)
             data_index = d % self.blocks_per_group
-            data_address = data_index + (data_group * self.group_size) + self.inodes_per_group
+            data_address = data_index + \
+                (data_group * self.group_size) + self.inodes_per_group
 
-            if data_address > max_address: max_address = data_address
-            if data_address < min_address: min_address = data_address
+            if data_address > max_address:
+                max_address = data_address
+            if data_address < min_address:
+                min_address = data_address
 
         return inode_number, inode_address, min_address, max_address
 
     def do_all_spans(self):
         current = 0
         total_dist = 0
-        
+
         min_group = 1e6
         max_group = -1
-    
+
         print('span: files')
         span_results = {}
         filespan_sum = 0
         filespan_cnt = 0
         for f in self.name_to_inode_map:
-            inode_number, inode_address, min_address, max_address = self.get_spans(f)
+            inode_number, inode_address, min_address, max_address = self.get_spans(
+                f)
             if self.inode_type[inode_number] == 'directory':
                 continue
-        
+
             data_span = max_address - min_address
             abs_min, abs_max = min_address, max_address
             if inode_address < abs_min:
@@ -658,9 +673,10 @@ class file_system:
             if inode_address > abs_max:
                 abs_max = inode_address
             file_span = abs_max - abs_min
-                
-            assert(inode_number not in span_results)
-            span_results[inode_number] = (inode_address, min_address, max_address)
+
+            assert (inode_number not in span_results)
+            span_results[inode_number] = (
+                inode_address, min_address, max_address)
 
             if options.solve:
                 print('  file: %10s  filespan: %3d' % (f, file_span))
@@ -676,14 +692,14 @@ class file_system:
                 print('               avg  filespan: %6s' % (filespan_avg))
             else:
                 print('               avg  filespan: ?')
-            
 
         print('\nspan: directories')
         dirspan_sum = 0
         dirspan_cnt = 0
         for f in self.name_to_inode_map:
             all_addresses = []
-            inode_number, inode_address, min_address, max_address = self.get_spans(f)
+            inode_number, inode_address, min_address, max_address = self.get_spans(
+                f)
             if self.inode_type[inode_number] != 'directory':
                 continue
             for address in [inode_address, min_address, max_address]:
@@ -712,18 +728,15 @@ class file_system:
         else:
             print('               avg  dirspan: ?')
 
-
         print('')
         return
 
-        
-    
 
 #
 # main program
 #
 parser = OptionParser()
-parser.add_option('-s', '--seed', default=0, help='the random seed', 
+parser.add_option('-s', '--seed', default=0, help='the random seed',
                   action='store', type='int', dest='seed')
 parser.add_option('-n', '--num_groups', default=10, help='number of block groups',
                   action='store', type='int', dest='num_groups')
