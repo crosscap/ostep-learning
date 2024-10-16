@@ -9,6 +9,7 @@ Each title of the homework may be different from the title of each chapter in th
 # Unfinished
 
 - [ ] l31/homework/q6
+- [ ] l32/homework
 - [ ] l39/homework/q4
 - [ ] l42/homework
 - [ ] l43/homework
